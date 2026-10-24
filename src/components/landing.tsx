@@ -26,7 +26,7 @@ import {
 } from "@/data/application";
 import { workflows } from "@/data/workflows";
 import { MeridianMark, componentIcons } from "./icons";
-import { CodeGlobe } from "./code-globe";
+import { CodeAtlas } from "./code-atlas";
 
 const checkout = workflows.find((w) => w.id === "checkout")!;
 const positions: Record<string, [number, number]> = {
@@ -315,8 +315,7 @@ function ProductPreview() {
 export function Landing() {
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [selected, setSelected] = useState("frontend");
-  const selectedModule = componentById[selected];
+  const [selected, setSelected] = useState("all");
 
   useEffect(() => {
     const preserveLink = () => {
@@ -445,16 +444,8 @@ export function Landing() {
                   </span>
                 </div>
               </div>
-              <div className="hero-visual">
-                <div className="globe-coordinate coord-top">
-                  A DIFFERENT KIND OF WORLD VIEW
-                </div>
-                <CodeGlobe selected={selected} onSelect={setSelected} />
-                <div className="globe-axis axis-top" />
-                <div className="globe-axis axis-bottom" />
-                <span className="globe-coordinate coord-bottom">
-                  YOUR SYSTEM. ONE CONNECTED PICTURE.
-                </span>
+              <div className="hero-visual hero-network">
+                <CodeAtlas selected={selected} onSelect={setSelected} />
               </div>
             </div>
             <div className="hero-footer">
@@ -464,23 +455,6 @@ export function Landing() {
                 </span>{" "}
                 A little context changes everything.
               </a>
-              <div className="hero-module-picker">
-                <span className="module-picker-label">Look inside</span>
-                <div role="group" aria-label="Highlight a globe module">
-                  {["frontend", "api", "database"].map((id) => (
-                    <button
-                      key={id}
-                      onClick={() => setSelected(id)}
-                      aria-pressed={selected === id}
-                    >
-                      {componentById[id].name}
-                    </button>
-                  ))}
-                </div>
-                <span className="module-picker-detail" aria-live="polite">
-                  {selectedModule.description}
-                </span>
-              </div>
             </div>
           </section>
           <div className="hero-proofline">

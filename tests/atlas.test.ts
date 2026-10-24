@@ -6,9 +6,98 @@ import {
   project,
   rootComponents,
 } from "../src/data/application";
-import { buildAtlasModel, getAtlasFocus, getModuleId } from "../src/lib/atlas";
+import { atlasGroupColors, buildAtlasModel, getAtlasFocus, getModuleId } from "../src/lib/atlas";
 import { explorerReducer } from "../src/hooks/use-explorer";
 import { globeArc } from "../src/lib/globe";
+import { initialNetworkCamera, layoutAtlas, projectNetworkPoint, rotateNetwork, zoomNetwork } from "../src/lib/atlas-layout";
+import { getAtlasOverviewLinks, getAtlasNeighborhood, searchAtlasNodes } from "../src/lib/atlas-discovery";
+
+test("the hollow globe preserves every real node in stable three-dimensional clusters", () => {
+  const model = buildAtlasModel();
+  const original = structuredClone(model);
+  const layout = layoutAtlas(model);
+  assert.deepEqual(model, original, "Layout must not mutate shared source data");
+  assert.deepEqual(layoutAtlas(model), layout, "Positions must remain stable between views");
+  assert.equal(layout.length, model.nodes.length);
+  for (const node of layout) {
+    assert.ok(Math.hypot(node.x, node.y, node.z) >= 205 - 1e-8);
+    assert.ok(Math.hypot(node.x, node.y, node.z) <= 220 + 1e-8);
+  }
+  assert.ok(layout.some((node) => node.z < -100), "The network must extend around the rear hemisphere");
+  assert.ok(layout.some((node) => node.z > 100));
+});
+
+test("the clean overview gives every smaller node exactly one real parent or reference", () => {
+  const model = buildAtlasModel();
+  const links = getAtlasOverviewLinks(model);
+  const children = model.nodes.filter((node) => node.kind !== "module");
+  assert.equal(links.length, children.length);
+  assert.ok(links.every((link) => model.links.some((real) => real.id === link.id)));
+  for (const node of children) assert.equal(links.filter((link) => link.target === node.id).length, 1);
+  assert.ok(links.length < model.links.length / 2);
+});
+
+test("every satellite stays close to its own module and shares its distinct group color", () => {
+  const nodes = layoutAtlas(buildAtlasModel());
+  const hubs = nodes.filter((node) => node.kind === "module");
+  assert.equal(new Set(hubs.map((node) => node.color)).size, hubs.length);
+  for (const node of nodes) {
+    const hub = hubs.find((candidate) => candidate.id === node.moduleId)!;
+    assert.equal(node.color, atlasGroupColors[hub.id]);
+    const ownDistance = Math.hypot(node.x - hub.x, node.y - hub.y, node.z - hub.z);
+    assert.ok(ownDistance < 70, `${node.id} drifted too far from ${hub.id}`);
+    for (const other of hubs) {
+      if (other.id === hub.id) continue;
+      const otherDistance = Math.hypot(node.x - other.x, node.y - other.y, node.z - other.z);
+      assert.ok(ownDistance < otherDistance, `${node.id} sits closer to ${other.id} than its own hub`);
+    }
+  }
+});
+
+test("focus reveals direct neighbours without introducing unrelated modules", () => {
+  const model = buildAtlasModel();
+  const focus = getAtlasNeighborhood(model, "file:lib/auth.ts");
+  assert.ok(focus.ids.has("file:middleware.ts"));
+  assert.ok(!focus.ids.has("payments"));
+  assert.ok(!focus.ids.has("frontend"), "Indirect dependents belong in Impact");
+  for (const id of focus.links) {
+    const link = model.links.find((edge) => edge.id === id)!;
+    assert.ok(link.source === "file:lib/auth.ts" || link.target === "file:lib/auth.ts");
+  }
+  assert.equal(getAtlasNeighborhood(model, null).ids.size, 0);
+});
+
+test("node search finds exact files, purpose, and every node category", () => {
+  const model = buildAtlasModel();
+  assert.equal(searchAtlasNodes(model, "lib/auth.ts")[0].id, "file:lib/auth.ts");
+  assert.ok(searchAtlasNodes(model, "sign-in").some((node) => node.id === "auth"));
+  assert.equal(searchAtlasNodes(model, "cart quantities")[0].id, "file:lib/validation.ts");
+  assert.ok(searchAtlasNodes(model, "", "file").every((node) => node.kind === "file"));
+  assert.equal(searchAtlasNodes(model, "nonexistent-xyz").length, 0);
+  assert.ok(searchAtlasNodes(model, "").every((node) => node.kind === "module"));
+});
+
+test("globe rotation follows the pointer in both axes without flipping the controls", () => {
+  const camera = { ...initialNetworkCamera };
+  const front: [number, number, number] = [0, 0, 210];
+  const origin = projectNetworkPoint(front, camera);
+  const right = projectNetworkPoint(front, rotateNetwork(camera, 20, 0, 600));
+  const down = projectNetworkPoint(front, rotateNetwork(camera, 0, 20, 600));
+  assert.ok(right.x > origin.x, "Dragging right moves the front nodes right");
+  assert.ok(down.y > origin.y, "Dragging down moves the front nodes down");
+  assert.equal(rotateNetwork(camera, 0, 10000, 600).pitch, 1.35);
+  assert.equal(rotateNetwork(camera, 0, -10000, 600).pitch, -1.35);
+  const back = projectNetworkPoint([0, 0, -210], camera);
+  assert.ok(origin.perspective > back.perspective, "Real perspective preserves near/far depth");
+});
+
+test("globe zoom keeps navigation within usable bounds", () => {
+  const camera = { ...initialNetworkCamera };
+  const next = zoomNetwork(camera, 1.2);
+  assert.equal(next.zoom, 1.2);
+  assert.equal(zoomNetwork(camera, 100).zoom, 2.6);
+  assert.equal(zoomNetwork(camera, 0.001).zoom, 0.6);
+});
 
 test("globe layout stays anchored while camera orbit is independent of the data", () => {
   for (const node of buildAtlasModel().nodes) {

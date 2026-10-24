@@ -10,11 +10,11 @@ import {
   ScanLine,
   Workflow,
 } from "lucide-react";
-import { rootComponents, kindMeta } from "@/data/application";
+import { rootComponents } from "@/data/application";
 import type { SourceFile } from "@/lib/types";
 import type { AtlasModel } from "@/lib/atlas";
 import type { AtlasIntent } from "@/lib/impact";
-import { getModuleId } from "@/lib/atlas";
+import { atlasGroupColors, getModuleId } from "@/lib/atlas";
 import { componentIcons } from "./icons";
 
 export interface AtlasViewProps {
@@ -59,12 +59,12 @@ export function AtlasFallback({
   return (
     <div className="atlas-fallback">
       <Orbit size={28} />
-      <h2>3D is unavailable in this browser.</h2>
+      <h2>The graph is unavailable in this browser.</h2>
       <p>You can still explore every module.</p>
       <div>
         {rootComponents.map((module) => (
           <button key={module.id} onClick={() => onSelect(module.id)}>
-            <i style={{ background: kindMeta[module.kind].color }} />
+            <i style={{ background: atlasGroupColors[module.id] }} />
             {module.name}
             <ArrowRight size={14} />
           </button>
@@ -131,13 +131,24 @@ export function AtlasView(props: AtlasViewProps) {
           <span>Find a module</span>
           <span>{rootComponents.length} modules</span>
         </div>
+        <select
+          className="atlas-module-select"
+          aria-label="Focus atlas module"
+          value={activeModule ?? ""}
+          onChange={(event) => props.onSelect(event.target.value || null)}
+        >
+          <option value="">All modules</option>
+          {rootComponents.map((module) => (
+            <option value={module.id} key={module.id}>{module.name}</option>
+          ))}
+        </select>
         <div className="atlas-module-list">
           {rootComponents.map((module) => {
             const Icon = componentIcons[module.kind];
             return (
               <button
                 key={module.id}
-                aria-label={`Focus ${module.name} on globe`}
+                aria-label={`Focus ${module.name} in atlas`}
                 aria-pressed={activeModule === module.id}
                 onClick={() =>
                   props.onSelect(
@@ -147,7 +158,7 @@ export function AtlasView(props: AtlasViewProps) {
               >
                 <Icon
                   size={15}
-                  style={{ color: kindMeta[module.kind].color }}
+                  style={{ color: atlasGroupColors[module.id] }}
                 />
                 <span>{module.name}</span>
               </button>

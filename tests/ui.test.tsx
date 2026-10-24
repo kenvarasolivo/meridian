@@ -60,6 +60,44 @@ const { AtlasFallback, AtlasView } = await import(
   "../src/components/atlas-view"
 );
 const { buildAtlasModel } = await import("../src/lib/atlas");
+const { AtlasFinder } = await import("../src/components/atlas-finder");
+const { AtlasFileInspector } = await import("../src/components/atlas-file-inspector");
+
+test("atlas finder searches purpose, filters files, and selects a result with the keyboard", () => {
+  let selection = "";
+  render(<AtlasFinder model={buildAtlasModel()} onSelect={(id) => { selection = id; }} />);
+  const body = within(document.body);
+  const input = body.getByRole("combobox", { name: "Find atlas nodes" });
+  fireEvent.focus(input);
+  fireEvent.change(input, { target: { value: "cart quantities" } });
+  assert.ok(body.getByRole("option", { name: /validation.ts/ }));
+  fireEvent.keyDown(input, { key: "Enter" });
+  assert.equal(selection, "file:lib/validation.ts");
+  assert.equal(input.getAttribute("aria-expanded"), "false");
+  fireEvent.change(input, { target: { value: "nonexistent-xyz" } });
+  assert.ok(body.getByText(/No matching nodes/));
+  fireEvent.keyDown(input, { key: "Escape" });
+  assert.equal(input.getAttribute("aria-expanded"), "false");
+  fireEvent.click(body.getByRole("button", { name: "Clear node search" }));
+  fireEvent.change(body.getByRole("combobox", { name: "Filter node type" }), { target: { value: "file" } });
+  fireEvent.change(input, { target: { value: "lib/auth.ts" } });
+  assert.ok(body.getAllByRole("option").some((option) => option.textContent?.includes("lib/auth.ts")));
+});
+
+test("file details explain connections and expose source and impact actions", () => {
+  const model = buildAtlasModel();
+  const file = model.nodes.find((node) => node.id === "file:lib/auth.ts")!.file!;
+  let selected = "", opened = false, impact = false;
+  render(<AtlasFileInspector model={model} file={file} mobileOpen={false} onClose={() => {}} onSelect={(id) => { selected = id; }} onSource={() => { opened = true; }} onImpact={() => { impact = true; }} />);
+  const panel = within(within(document.body).getByRole("complementary", { name: "Source file inspector" }));
+  assert.ok(panel.getByText(file.description));
+  fireEvent.click(panel.getByRole("button", { name: /middleware.ts/ }));
+  assert.equal(selected, "file:middleware.ts");
+  fireEvent.click(panel.getByRole("button", { name: "Open source" }));
+  assert.equal(opened, true);
+  fireEvent.click(panel.getByRole("button", { name: "Show impact" }));
+  assert.equal(impact, true);
+});
 
 afterEach(() => {
   cleanup();
@@ -90,21 +128,21 @@ test("the atlas module dock focuses a module, returns to overview, and exposes i
   const dock = within(
     within(document.body).getByRole("navigation", { name: "Atlas modules" }),
   );
-  fireEvent.click(dock.getByRole("button", { name: "Focus API on globe" }));
+  fireEvent.click(dock.getByRole("button", { name: "Focus API in atlas" }));
   assert.equal(selection, "api");
   view.rerender(<AtlasView {...props} selectedId="api" />);
   assert.equal(
     dock
-      .getByRole("button", { name: "Focus API on globe" })
+      .getByRole("button", { name: "Focus API in atlas" })
       .getAttribute("aria-pressed"),
     "true",
   );
-  fireEvent.click(dock.getByRole("button", { name: "Focus API on globe" }));
+  fireEvent.click(dock.getByRole("button", { name: "Focus API in atlas" }));
   assert.equal(selection, null);
   view.rerender(
     <AtlasView {...props} selectedId="file:app/api/checkout/route.ts" />,
   );
-  fireEvent.click(dock.getByRole("button", { name: "Focus API on globe" }));
+  fireEvent.click(dock.getByRole("button", { name: "Focus API in atlas" }));
   assert.equal(selection, "api");
   fireEvent.click(
     within(document.body).getByRole("button", { name: "Impact" }),
@@ -112,9 +150,13 @@ test("the atlas module dock focuses a module, returns to overview, and exposes i
   assert.equal(intent, "impact");
   fireEvent.click(dock.getByRole("button", { name: "Open 2D map" }));
   assert.equal(openedMap, true);
+  fireEvent.change(dock.getByRole("combobox", { name: "Focus atlas module" }), { target: { value: "auth" } });
+  assert.equal(selection, "auth");
+  fireEvent.change(dock.getByRole("combobox", { name: "Focus atlas module" }), { target: { value: "" } });
+  assert.equal(selection, null);
 });
 
-test("browsers without WebGL can select modules or return to the map", () => {
+test("the graph fallback can select modules or return to the map", () => {
   let selected = "";
   let returned = false;
   render(

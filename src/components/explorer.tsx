@@ -31,6 +31,7 @@ import { ImpactPanel } from "./impact-panel";
 import { buildAtlasModel } from "@/lib/atlas";
 import { getChangeImpact, type AtlasIntent } from "@/lib/impact";
 import { Inspector } from "./inspector";
+import { AtlasFileInspector } from "./atlas-file-inspector";
 import { SearchDialog } from "./search-dialog";
 import { SourceDialog } from "./source-dialog";
 import { HelpDialog } from "./help-dialog";
@@ -463,6 +464,10 @@ export function Explorer() {
                 }}
                 onExplore={explore}
               />
+            ) : state.mode === "atlas" && atlasFile ? (
+              <AtlasFileInspector model={atlasModel} file={atlasFile} mobileOpen={mobileInspector}
+                onClose={() => select(null)} onSelect={select} onSource={setSource}
+                onImpact={() => showImpact(`file:${atlasFile.path}`)} />
             ) : (
               inspectorOpen && (
                 <Inspector

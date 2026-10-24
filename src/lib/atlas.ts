@@ -1,7 +1,6 @@
 import {
   componentById,
   components,
-  kindMeta,
   project,
   relationships,
   rootComponents,
@@ -36,6 +35,17 @@ export type AtlasLink = {
 };
 
 export type AtlasModel = { nodes: AtlasPoint[]; links: AtlasLink[] };
+
+/** One stable hue per module, shared by its hub, components, files, and controls. */
+export const atlasGroupColors: Record<string, string> = {
+  frontend: "#8ab4ff",
+  api: "#75d9ad",
+  auth: "#c4a4f4",
+  database: "#e5bd72",
+  payments: "#ed9c86",
+  jobs: "#71cbd7",
+  notifications: "#ec96c4",
+};
 
 const centers: Record<string, [number, number, number]> = Object.fromEntries(
   globeLocations.map((location) => [
@@ -82,7 +92,6 @@ function position(id: string, moduleId: string): [number, number, number] {
 export function buildAtlasModel(): AtlasModel {
   const nodes: AtlasPoint[] = components.map((component) => {
     const moduleId = getModuleId(component.id);
-    const module = componentById[moduleId];
     const isModule = !component.parentId;
     const [x, y, z] = isModule
       ? centers[moduleId]
@@ -93,7 +102,7 @@ export function buildAtlasModel(): AtlasModel {
       kind: isModule ? "module" : "component",
       moduleId,
       componentId: component.id,
-      color: kindMeta[module.kind].color,
+      color: atlasGroupColors[moduleId],
       connections: 0,
       x,
       y,
@@ -112,7 +121,7 @@ export function buildAtlasModel(): AtlasModel {
       kind: "file",
       moduleId,
       file,
-      color: kindMeta[componentById[moduleId].kind].color,
+      color: atlasGroupColors[moduleId],
       connections: 0,
       x,
       y,
