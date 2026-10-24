@@ -1,0 +1,307 @@
+/* Keep context in the header and reveal detail only on selection. */
+.workspace-body.map-only {
+  grid-template-columns: minmax(0, 1fr);
+}
+.topbar {
+  height: 60px;
+  padding: 0 23px;
+}
+.topbar .breadcrumbs {
+  font-size: 12px;
+  gap: 12px;
+}
+.topbar .breadcrumbs h1 {
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.15px;
+  color: var(--text);
+}
+.topbar .search-trigger {
+  margin: 0;
+  height: 32px;
+  font-size: 11px;
+  background: none;
+}
+.topbar .search-trigger > span {
+  display: inline;
+}
+.topbar .search-trigger > kbd {
+  margin-left: 25px;
+}
+.map-toolbar {
+  height: 57px;
+  margin: 0 24px;
+  border: none;
+}
+.view-tabs {
+  gap: 27px;
+  height: 38px;
+}
+.view-tabs > button {
+  font-size: 12px;
+}
+.graph-region {
+  margin: 0 14px;
+  border-color: var(--rule);
+}
+.canvas-hint {
+  font-size: 11px;
+  color: var(--muted);
+  bottom: 20px;
+}
+.graph-canvas .canvas-controls {
+  bottom: 17px;
+}
+.architecture-node {
+  width: 224px;
+  padding: 7px 0 4px;
+}
+.architecture-node .node-title {
+  padding: 13px 33px 0 16px;
+  font-size: 17px;
+}
+.architecture-node .node-description {
+  padding: 9px 16px 13px;
+  min-height: 53px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.node-drill {
+  position: absolute;
+  right: 9px;
+  top: 14px;
+  width: 24px;
+  height: 26px;
+  justify-content: center;
+  color: var(--faint);
+}
+.node-drill:hover {
+  color: var(--accent);
+  background: var(--raised);
+}
+.node-step {
+  position: absolute;
+  right: -7px;
+  top: -7px;
+  width: 22px;
+  height: 22px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 11px;
+  z-index: 1;
+}
+.is-compact .node-title {
+  padding: 13px 16px 16px;
+}
+.entity-node {
+  width: 235px;
+}
+.entity-fields {
+  margin-top: 0;
+  padding-top: 9px;
+  padding-bottom: 9px;
+}
+.workflow-shelf {
+  display: flex;
+  align-items: center;
+  gap: 19px;
+  padding: 14px 0;
+  margin: 0 24px;
+  border: none;
+}
+.shelf-heading {
+  margin: 0;
+}
+.shelf-heading > span:first-child {
+  color: var(--faint);
+  font-size: 11px;
+}
+.shelf-heading svg {
+  display: none;
+}
+.workflow-cards {
+  display: flex;
+  gap: 8px;
+}
+.workflow-card {
+  min-height: 32px;
+  padding: 0 10px;
+  background: none;
+  border-color: transparent;
+  gap: 7px;
+}
+.workflow-card:hover {
+  border-color: var(--border);
+  background: var(--surface);
+}
+.workflow-card > svg:first-child {
+  color: var(--faint);
+  width: 14px;
+  height: 14px;
+}
+.workflow-card strong {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.workflow-card:hover strong {
+  color: var(--text);
+}
+.project-switcher {
+  padding-top: 9px;
+  padding-bottom: 9px;
+}
+.project-switcher-text > span {
+  font-size: 10px;
+}
+.sidebar .help-link {
+  padding-bottom: 16px;
+}
+.inspector .component-detail-heading {
+  padding: 23px 0 0;
+  border: none;
+}
+.detail-icon {
+  margin-bottom: 13px;
+}
+.component-detail-heading h2 {
+  font-size: 23px;
+}
+.inspector-section p {
+  font-size: 12px;
+  line-height: 1.8;
+}
+.inspector-footer {
+  padding-bottom: 15px;
+  background: var(--surface);
+  border-color: var(--border);
+}
+.implementation-details {
+  margin: 24px 0;
+  border-top: 1px solid var(--border);
+  padding-top: 17px;
+}
+.implementation-details > summary,
+.workflow-all-steps > summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  list-style: none;
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--muted);
+}
+.implementation-details > summary::-webkit-details-marker,
+.workflow-all-steps > summary::-webkit-details-marker {
+  display: none;
+}
+.implementation-details[open] > summary > svg,
+.workflow-all-steps[open] > summary > svg {
+  transform: rotate(90deg);
+}
+.workflow-all-steps > summary {
+  margin-bottom: 13px;
+}
+.workflow-panel > h2 {
+  font-size: 22px;
+}
+.workflow-current > h3 {
+  font-size: 17px;
+}
+.workflow-step-meta {
+  margin-top: 18px;
+}
+.mobile-inspect-button {
+  bottom: 17px;
+}
+.inspector.mobile-open {
+  bottom: 0;
+}
+@media (max-width: 900px) {
+  .inspector {
+    top: 60px;
+  }
+  .topbar .search-trigger > kbd {
+    display: none;
+  }
+}
+@media (max-width: 600px) {
+  .topbar {
+    padding: 0 13px 0 7px;
+    height: 56px;
+    gap: 8px;
+  }
+  .topbar-location {
+    gap: 5px;
+    min-width: 0;
+  }
+  .topbar .breadcrumbs,
+  .topbar .breadcrumbs h1 {
+    font-size: 11px;
+    gap: 7px;
+  }
+  .topbar .breadcrumbs {
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .topbar .search-trigger {
+    width: 36px;
+    min-width: 36px;
+    height: 36px;
+  }
+  .topbar .search-trigger > span {
+    display: none;
+  }
+  .map-toolbar {
+    height: 54px;
+    margin: 0 18px;
+  }
+  .view-tabs {
+    gap: 25px;
+  }
+  .view-tabs > button {
+    font-size: 11px;
+  }
+  .graph-region {
+    min-height: 390px;
+    margin: 0 11px;
+  }
+  .mobile-list-heading {
+    padding: 13px 15px;
+  }
+  .mobile-component-row > button:first-child {
+    padding: 16px 0 11px;
+  }
+  .mobile-component-row .mobile-drill {
+    padding-bottom: 14px;
+  }
+  .workflow-shelf {
+    gap: 9px;
+    margin: 0 12px;
+    padding: 13px 0;
+  }
+  .shelf-heading {
+    margin: 0;
+  }
+  .workflow-cards {
+    overflow-x: auto;
+    gap: 0;
+    padding: 0;
+    flex: 1;
+  }
+  .workflow-card {
+    flex: 0 0 auto;
+    gap: 6px;
+    min-height: 40px;
+    padding: 0 8px;
+  }
+  .workflow-card strong {
+    font-size: 11px;
+  }
+  .inspector {
+    top: auto;
+  }
+}
