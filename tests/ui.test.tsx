@@ -56,10 +56,62 @@ const { HelpDialog } = await import("../src/components/help-dialog");
 const { workflows } = await import("../src/data/workflows");
 const { sources } = await import("../src/data/sources");
 const { Explorer } = await import("../src/components/explorer");
-const { AtlasFallback } = await import("../src/components/atlas-view");
+const { AtlasFallback, AtlasView } = await import(
+  "../src/components/atlas-view"
+);
+const { buildAtlasModel } = await import("../src/lib/atlas");
 
 afterEach(() => {
   cleanup();
+});
+
+test("the atlas module dock focuses a module, returns to overview, and exposes impact mode", () => {
+  let selection: string | null = null;
+  let intent = "explore";
+  let openedMap = false;
+  const props = {
+    model: buildAtlasModel(),
+    intent: "explore" as const,
+    selectedId: null as string | null,
+    focusedIds: [],
+    onSelect: (id: string | null) => {
+      selection = id;
+    },
+    onIntentChange: (next: "explore" | "impact") => {
+      intent = next;
+    },
+    onSource: () => {},
+    onMap: () => {
+      openedMap = true;
+    },
+    onReset: () => {},
+  };
+  const view = render(<AtlasView {...props} />);
+  const dock = within(
+    within(document.body).getByRole("navigation", { name: "Atlas modules" }),
+  );
+  fireEvent.click(dock.getByRole("button", { name: "Focus API on globe" }));
+  assert.equal(selection, "api");
+  view.rerender(<AtlasView {...props} selectedId="api" />);
+  assert.equal(
+    dock
+      .getByRole("button", { name: "Focus API on globe" })
+      .getAttribute("aria-pressed"),
+    "true",
+  );
+  fireEvent.click(dock.getByRole("button", { name: "Focus API on globe" }));
+  assert.equal(selection, null);
+  view.rerender(
+    <AtlasView {...props} selectedId="file:app/api/checkout/route.ts" />,
+  );
+  fireEvent.click(dock.getByRole("button", { name: "Focus API on globe" }));
+  assert.equal(selection, "api");
+  fireEvent.click(
+    within(document.body).getByRole("button", { name: "Impact" }),
+  );
+  assert.equal(intent, "impact");
+  fireEvent.click(dock.getByRole("button", { name: "Open 2D map" }));
+  assert.equal(openedMap, true);
 });
 
 test("browsers without WebGL can select modules or return to the map", () => {
@@ -124,10 +176,7 @@ test("source inspection can trace impact, explain a path, and return to explorat
 test("the workspace reveals details on selection and hides them when exploring deeper", () => {
   render(<Explorer />);
   const body = within(document.body);
-  assert.equal(
-    body.getAllByRole("tab")[0].textContent,
-    "Atlas",
-  );
+  assert.equal(body.getAllByRole("tab")[0].textContent, "Atlas");
   assert.equal(
     body.getByRole("tab", { name: "Atlas" }).getAttribute("aria-selected"),
     "true",

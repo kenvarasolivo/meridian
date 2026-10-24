@@ -4,16 +4,43 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ForceGraph3D, {
   type ForceGraphMethods,
   type GraphData,
-  type LinkObject,
 } from "react-force-graph-3d";
-import { Color, Group, Mesh, MeshBasicMaterial, SphereGeometry } from "three";
+import {
+  AmbientLight,
+  BufferGeometry,
+  DirectionalLight,
+  Float32BufferAttribute,
+  Group,
+  Line,
+  LineBasicMaterial,
+  LineLoop,
+  Mesh,
+  MeshBasicMaterial,
+  MeshPhongMaterial,
+  PerspectiveCamera,
+  Points,
+  PointsMaterial,
+  RingGeometry,
+  SphereGeometry,
+  Spherical,
+  Vector3,
+} from "three";
 import type { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import SpriteText from "three-spritetext";
 import { useReducedMotion } from "framer-motion";
-import { Crosshair, Maximize, Minus, Plus, RotateCcw, X } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Crosshair,
+  FileCode2,
+  Maximize,
+  Minus,
+  Plus,
+  RotateCcw,
+} from "lucide-react";
 import { getAtlasFocus, type AtlasLink, type AtlasPoint } from "@/lib/atlas";
+import { globeArc, globePosition } from "@/lib/globe";
 import { getChangeImpact } from "@/lib/impact";
-import { rootComponents } from "@/data/application";
 import { AtlasFallback, type AtlasViewProps } from "./atlas-view";
 
 type SceneLink = Omit<AtlasLink, "source" | "target"> & {
@@ -21,8 +48,8 @@ type SceneLink = Omit<AtlasLink, "source" | "target"> & {
   target: string | AtlasPoint;
 };
 type GraphMethods = ForceGraphMethods<AtlasPoint, SceneLink>;
-const endpoint = (point: string | AtlasPoint) =>
-  typeof point === "string" ? point : point.id;
+const endpoint = (node: string | AtlasPoint) =>
+  typeof node === "string" ? node : node.id;
 const escape = (value: string) =>
   value.replace(
     /[&<>"']/g,
@@ -32,6 +59,7 @@ const escape = (value: string) =>
       ]!,
   );
 
+/** A stable globe: data locations stay fixed while the visitor orbits the camera. */
 export default function AtlasEngine({
   model,
   intent,
@@ -44,14 +72,26 @@ export default function AtlasEngine({
 }: AtlasViewProps) {
   const container = useRef<HTMLDivElement>(null);
   const graph = useRef<GraphMethods | undefined>(undefined);
-  const nodeMeshes = useRef(new Map<string, Mesh<SphereGeometry, MeshBasicMaterial>>());
+  const labels = useRef(
+    new Map<string, { label: SpriteText; point: AtlasPoint }>(),
+  );
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  const [unavailable, setUnavailable] = useState(false);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [showFiles, setShowFiles] = useState(false);
+  const reducedMotion = useReducedMotion();
+  const duration = reducedMotion ? 0 : 600;
+  const ready = size.width > 0 && size.height > 0;
   const data = useMemo<GraphData<AtlasPoint, SceneLink>>(
     () => ({
       nodes: model.nodes.map((node) => ({ ...node })),
       links: model.links.map((link) => ({ ...link })),
     }),
     [model],
+  );
+  const points = useMemo(
+    () => new Map(data.nodes.map((node) => [node.id, node])),
+    [data],
   );
   const impact = useMemo(
     () =>
@@ -72,21 +112,23 @@ export default function AtlasEngine({
     [model, selectedId, focusedIds, impact],
   );
   const focused = active.size > 0;
-  const reducedMotion = useReducedMotion();
-  const [size, setSize] = useState({ width: 0, height: 0 });
-  const [unavailable, setUnavailable] = useState(false);
-  const [hint, setHint] = useState(true);
-  const duration = reducedMotion ? 0 : 650;
-  const ready = size.width > 0 && size.height > 0;
+  const visible = useCallback(
+    (node: AtlasPoint) =>
+      node.kind === "module" || showFiles || active.has(node.id),
+    [active, showFiles],
+  );
+  const visibleCount = data.nodes.filter(
+    (node) => visible(node) && node.kind === "file",
+  ).length;
 
   useEffect(() => {
     if (!container.current) return;
-    const observer = new ResizeObserver(([entry]) => {
+    const observer = new ResizeObserver(([entry]) =>
       setSize({
         width: Math.floor(entry.contentRect.width),
         height: Math.floor(entry.contentRect.height),
-      });
-    });
+      }),
+    );
     observer.observe(container.current);
     try {
       const canvas = document.createElement("canvas");
@@ -99,228 +141,335 @@ export default function AtlasEngine({
     return () => observer.disconnect();
   }, []);
 
+  const viewingDistance = useCallback(() => {
+    const fov =
+      (graph.current?.camera() as PerspectiveCamera | undefined)?.fov ?? 50;
+    return Math.max(
+      520,
+      235 /
+        Math.sin((fov * Math.PI) / 360) /
+        Math.min(
+          1,
+          Math.max(150, size.height - 110) / Math.max(1, size.height),
+          Math.max(200, size.width - 65) / Math.max(1, size.height),
+        ),
+    );
+  }, [size]);
   const fit = useCallback(() => {
-    graph.current?.zoomToFit(duration, 65);
-  }, [duration]);
+    const api = graph.current;
+    if (!api) return;
+    const direction = api
+      .camera()
+      .position.clone()
+      .normalize()
+      .multiplyScalar(viewingDistance());
+    api.cameraPosition(direction, { x: 0, y: 0, z: 0 }, duration);
+  }, [viewingDistance, duration]);
   const home = useCallback(() => {
     onReset();
+    setShowFiles(false);
     graph.current?.cameraPosition(
-      { x: 25, y: 15, z: 780 },
+      { x: 0, y: 20, z: viewingDistance() },
       { x: 0, y: 0, z: 0 },
       duration,
     );
-    window.setTimeout(
-      () => graph.current?.zoomToFit(duration, 65),
-      reducedMotion ? 0 : 100,
-    );
-  }, [onReset, duration, reducedMotion]);
+  }, [duration, viewingDistance, onReset]);
 
   useEffect(() => {
-    if (!ready || !graph.current) return;
     const api = graph.current;
+    if (!ready || !api) return;
     api.d3Force("center", null);
-    api.d3Force("charge")?.strength(-9);
-    api
-      .d3Force("link")
-      ?.distance((link: SceneLink) =>
-        link.kind === "dependency" ? 170 : link.kind === "import" ? 85 : 42,
-      )
-      .strength((link: SceneLink) =>
-        link.kind === "contains" ? 0.19 : link.kind === "source" ? 0.07 : 0.015,
-      );
-    api.d3Force("clusters", (alpha: number) => {
-      for (const node of data.nodes) {
-        if (node.kind === "module") continue;
-        const center = data.nodes.find((point) => point.id === node.moduleId)!;
-        node.vx = (node.vx ?? 0) + (center.x! - node.x!) * alpha * 0.06;
-        node.vy = (node.vy ?? 0) + (center.y! - node.y!) * alpha * 0.06;
-        node.vz = (node.vz ?? 0) + (center.z! - node.z!) * alpha * 0.06;
-      }
-    });
+    api.d3Force("charge", null);
+    api.d3Force("link", null);
     const controls = api.controls() as OrbitControls;
+    controls.enablePan = false;
     controls.enableDamping = !reducedMotion;
-    controls.dampingFactor = 0.12;
-    controls.minDistance = 65;
+    controls.dampingFactor = 0.1;
+    controls.minDistance = 290;
     controls.maxDistance = 1800;
-    api.cameraPosition({ x: 25, y: 15, z: 780 }, { x: 0, y: 0, z: 0 }, 0);
-    if (!reducedMotion) api.d3ReheatSimulation();
-    const timer = window.setTimeout(() => api.zoomToFit(0, 65), 180);
-    return () => window.clearTimeout(timer);
-  }, [ready, data, reducedMotion]);
+    const updateLabels = () => {
+      const cameraDirection = api.camera().position.clone().normalize();
+      for (const { label, point } of labels.current.values()) {
+        label.visible =
+          cameraDirection.dot(
+            new Vector3(point.x, point.y, point.z).normalize(),
+          ) > 0.06;
+      }
+    };
+    controls.addEventListener("change", updateLabels);
+    api.cameraPosition({ x: 0, y: 20, z: 700 }, { x: 0, y: 0, z: 0 }, 0);
+    const globe = new Group();
+    globe.name = "Meridian globe (decorative coordinate grid)";
+    globe.add(
+      new Mesh(
+        new SphereGeometry(179, 64, 48),
+        new MeshPhongMaterial({
+          color: "#10253e",
+          specular: "#203952",
+          shininess: 8,
+        }),
+      ),
+    );
+    const gridMaterial = new LineBasicMaterial({
+      color: "#507ca7",
+      transparent: true,
+      opacity: 0.22,
+    });
+    for (let lng = -180; lng < 180; lng += 20) {
+      const coords = Array.from(
+        { length: 91 },
+        (_, i) => new Vector3(...globePosition(-90 + i * 2, lng, 180)),
+      );
+      globe.add(
+        new Line(new BufferGeometry().setFromPoints(coords), gridMaterial),
+      );
+    }
+    for (let lat = -75; lat <= 75; lat += 15) {
+      const coords = Array.from(
+        { length: 120 },
+        (_, i) => new Vector3(...globePosition(lat, i * 3, 180)),
+      );
+      globe.add(
+        new LineLoop(new BufferGeometry().setFromPoints(coords), gridMaterial),
+      );
+    }
+    const dots = [];
+    for (let i = 0; i < 1900; i++) {
+      const y = 1 - (i / 1899) * 2,
+        radius = Math.sqrt(1 - y * y),
+        angle = i * Math.PI * (3 - Math.sqrt(5));
+      dots.push(
+        Math.cos(angle) * radius * 180.3,
+        y * 180.3,
+        Math.sin(angle) * radius * 180.3,
+      );
+    }
+    const geometry = new BufferGeometry();
+    geometry.setAttribute("position", new Float32BufferAttribute(dots, 3));
+    globe.add(
+      new Points(
+        geometry,
+        new PointsMaterial({
+          color: "#8db8e5",
+          size: 0.65,
+          transparent: true,
+          opacity: 0.5,
+          sizeAttenuation: true,
+        }),
+      ),
+    );
+    api.scene().add(globe);
+    const light = new DirectionalLight("#bfdcff", 1.6);
+    light.position.set(-200, 300, 400);
+    api.lights([new AmbientLight("#b2cae8", 1.1), light]);
+    return () => {
+      controls.removeEventListener("change", updateLabels);
+      api.scene().remove(globe);
+      globe.traverse((object) => {
+        if (
+          object instanceof Mesh ||
+          object instanceof Line ||
+          object instanceof Points
+        ) {
+          object.geometry.dispose();
+          const materials = Array.isArray(object.material)
+            ? object.material
+            : [object.material];
+          materials.forEach((material) => material.dispose());
+        }
+      });
+    };
+  }, [ready, reducedMotion]);
 
   useEffect(() => {
     if (!ready || !graph.current) return;
-    const timer = window.setTimeout(() => {
-      if (!selectedId && !focusedIds.length) {
-        graph.current?.zoomToFit(duration, 65);
-        return;
-      }
-      if (active.size === 1) {
-        const center = data.nodes.find((node) => node.id === selectedId);
-        if (center)
-          graph.current?.cameraPosition(
-            { x: center.x! + 20, y: center.y! + 20, z: center.z! + 300 },
-            { x: center.x!, y: center.y!, z: center.z! },
-            duration,
-          );
-        return;
-      }
-      graph.current?.zoomToFit(duration, 65, (node) => active.has(node.id));
-    }, 250);
-    return () => window.clearTimeout(timer);
-  }, [
-    selectedId,
-    focusedIds,
-    ready,
-    size.width,
-    size.height,
-    active,
-    data,
-    duration,
-  ]);
+    const node = selectedId ? points.get(selectedId) : undefined;
+    const direction = node
+      ? new Vector3(node.x, node.y, node.z)
+      : new Vector3(0, 20, viewingDistance());
+    direction.normalize().multiplyScalar(viewingDistance());
+    graph.current.cameraPosition(direction, { x: 0, y: 0, z: 0 }, duration);
+  }, [selectedId, ready, points, viewingDistance, duration]);
 
   const nodeObject = useCallback(
     (node: AtlasPoint) => {
-      const isActive = !focused || active.has(node.id);
       const group = new Group();
-      const radius =
-        impact?.targetId === node.id && node.kind === "file"
-          ? 4.2
-          : node.kind === "module"
-            ? Math.min(6.8, 3.7 + node.connections * 0.15)
-            : node.kind === "component"
-              ? 2.6
-              : 2;
-      const color = new Color(node.color);
-      if (node.kind === "file") color.multiplyScalar(0.82);
-      if (impact && isActive)
-        color.set(
-          node.id === impact.targetId
-            ? "#eeefe9"
-            : direct.has(node.id)
-              ? "#75d9ad"
-              : "#7b9b89",
-        );
-      const sphere = new Mesh(
-        new SphereGeometry(radius, 18, 12),
-        new MeshBasicMaterial({
-          color,
-          transparent: true,
-          opacity: isActive
-            ? impact && node.id !== impact.targetId && !direct.has(node.id)
-              ? 0.7
-              : 0.96
-            : 0.08,
-          depthWrite: isActive,
-        }),
+      const isActive = !focused || active.has(node.id);
+      const selected = selectedId === node.id;
+      const module = node.kind === "module";
+      const color = selected
+        ? "#eff7ff"
+        : impact && isActive
+          ? direct.has(node.id)
+            ? "#a5d0ff"
+            : "#7596bc"
+          : module
+            ? node.color
+            : "#a4c4ea";
+      group.add(
+        new Mesh(
+          new SphereGeometry(
+            selected ? 5.3 : module ? 4.1 : node.kind === "file" ? 1.9 : 2.5,
+            20,
+            14,
+          ),
+          new MeshBasicMaterial({
+            color,
+            transparent: true,
+            opacity: isActive ? 1 : 0.32,
+          }),
+        ),
       );
-      nodeMeshes.current.set(node.id, sphere);
-      group.add(sphere);
-      if (node.kind === "module" || impact?.targetId === node.id) {
+      if (module || selected) {
+        const ring = new Mesh(
+          new RingGeometry(selected ? 7 : 6, selected ? 8 : 6.5, 40),
+          new MeshBasicMaterial({
+            color: selected ? "#b4d8ff" : node.color,
+            transparent: true,
+            opacity: isActive ? 0.65 : 0.2,
+            side: 2,
+          }),
+        );
+        ring.quaternion.setFromUnitVectors(
+          new Vector3(0, 0, 1),
+          new Vector3(node.x, node.y, node.z).normalize(),
+        );
+        group.add(ring);
         const label = new SpriteText(
           node.file ? node.name.split("/").at(-1)! : node.name,
         );
-        label.color = isActive
-          ? impact && node.id !== impact.targetId
-            ? direct.has(node.id)
-              ? "#a4e8c7"
-              : "#8aa593"
-            : "#e8ece3"
-          : "#586052";
         label.fontFace = "Public Sans Variable, Arial, sans-serif";
+        label.fontWeight = "500";
         label.fontSize = 60;
-        label.fontWeight = "400";
-        label.textHeight = 0.018;
+        label.color = isActive ? "#e0ecfc" : "#889bb3";
+        label.backgroundColor = selected ? "#2a4562" : "#14263a";
+        label.padding = [0.009, 0.005];
+        label.borderRadius = 0.004;
+        label.textHeight = 0.019;
         label.material.sizeAttenuation = false;
-        label.position.set(0, 15, 0);
         label.material.depthTest = false;
-        label.renderOrder = 2;
+        label.renderOrder = 4;
+        label.position.set(0, 13, 0);
+        label.visible =
+          !graph.current ||
+          graph.current
+            .camera()
+            .position.clone()
+            .normalize()
+            .dot(new Vector3(node.x, node.y, node.z).normalize()) > 0.06;
+        labels.current.set(node.id, { label, point: node });
         group.add(label);
       }
       return group;
     },
-    [active, focused, impact, direct],
+    [active, direct, focused, impact, selectedId],
   );
 
-  useEffect(() => {
-    let frame = 0;
-    let previousTime = performance.now();
-    const animate = (time: number) => {
-      const blend = reducedMotion ? 1 : 1 - Math.exp(-(time - previousTime) / 75);
-      previousTime = time;
-      let moving = false;
-      for (const [id, mesh] of nodeMeshes.current) {
-        const target = id === hoveredId ? 1.9 : 1;
-        const scale = mesh.scale.x + (target - mesh.scale.x) * blend;
-        const settled = Math.abs(target - scale) < 0.001;
-        mesh.scale.setScalar(settled ? target : scale);
-        moving ||= !settled;
-      }
-      if (moving) frame = requestAnimationFrame(animate);
-    };
-    frame = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(frame);
-  }, [hoveredId, reducedMotion, nodeObject]);
-
-  const isHoveredLink = useCallback(
-    (link: LinkObject<AtlasPoint, SceneLink>) =>
-      hoveredId !== null &&
-      (endpoint(link.source as string | AtlasPoint) === hoveredId ||
-        endpoint(link.target as string | AtlasPoint) === hoveredId) &&
-      (!impact || impact.linkIds.has(link.id)) &&
-      (!focused ||
-        (active.has(endpoint(link.source as string | AtlasPoint)) &&
-          active.has(endpoint(link.target as string | AtlasPoint)))),
-    [hoveredId, impact, focused, active],
-  );
-
-  const linkColor = useCallback(
-    (link: LinkObject<AtlasPoint, SceneLink>) => {
-      const a = endpoint(link.source as string | AtlasPoint);
-      const b = endpoint(link.target as string | AtlasPoint);
-      if (isHoveredLink(link)) return "#b3efd1";
-      if (impact)
-        return impact.linkIds.has(link.id)
-          ? direct.has(a)
-            ? "#75d9ad"
-            : "#7b9b89"
-          : "#32382f";
-      if (focused)
-        return active.has(a) && active.has(b) ? "#75d9ad" : "#3a4037";
-      return link.kind === "dependency"
-        ? "#8a9682"
-        : link.kind === "import"
-          ? "#64715e"
-          : "#64715e";
+  const linkObject = useCallback(
+    (link: SceneLink) => {
+      const a = points.get(endpoint(link.source))!,
+        b = points.get(endpoint(link.target))!;
+      const highlighted = impact
+        ? impact.linkIds.has(link.id)
+        : focused
+          ? active.has(a.id) && active.has(b.id)
+          : false;
+      const hovered = hoveredId === a.id || hoveredId === b.id;
+      const geometry = new BufferGeometry().setFromPoints(
+        globeArc(
+          [a.x, a.y, a.z],
+          [b.x, b.y, b.z],
+          link.kind === "dependency" ? 32 : 9,
+        ).map((point) => new Vector3(...point)),
+      );
+      return new Line(
+        geometry,
+        new LineBasicMaterial({
+          color: highlighted || hovered ? "#b4d5ff" : "#6b98ca",
+          transparent: true,
+          opacity: hovered
+            ? 0.9
+            : highlighted
+              ? impact
+                ? 0.9
+                : link.kind === "contains"
+                  ? 0.26
+                  : link.kind === "source"
+                    ? 0.48
+                    : 0.7
+              : focused
+                ? 0.12
+                : 0.5,
+        }),
+      );
     },
-    [active, focused, impact, direct, isHoveredLink],
+    [points, focused, active, hoveredId, impact],
   );
 
   function zoom(factor: number) {
     const api = graph.current;
     if (!api) return;
-    const target = (api.controls() as OrbitControls).target;
     const position = api
       .camera()
       .position.clone()
-      .sub(target)
       .multiplyScalar(factor)
-      .add(target);
+      .clampLength(290, 1800);
+    api.cameraPosition(position, { x: 0, y: 0, z: 0 }, reducedMotion ? 0 : 200);
+  }
+  function rotate(angle: number) {
+    const api = graph.current;
+    if (!api) return;
+    const position = api
+      .camera()
+      .position.clone()
+      .applyAxisAngle(new Vector3(0, 1, 0), angle);
+    api.cameraPosition(position, { x: 0, y: 0, z: 0 }, reducedMotion ? 0 : 200);
+  }
+  function tilt(angle: number) {
+    const api = graph.current;
+    if (!api) return;
+    const spherical = new Spherical().setFromVector3(api.camera().position);
+    spherical.phi = Math.max(
+      0.12,
+      Math.min(Math.PI - 0.12, spherical.phi + angle),
+    );
     api.cameraPosition(
-      { x: position.x, y: position.y, z: position.z },
-      { x: target.x, y: target.y, z: target.z },
+      new Vector3().setFromSpherical(spherical),
+      { x: 0, y: 0, z: 0 },
       reducedMotion ? 0 : 200,
     );
   }
-
   if (unavailable) return <AtlasFallback onSelect={onSelect} onMap={onMap} />;
   return (
     <div
       className="atlas-canvas"
       ref={container}
-      onPointerLeave={() => setHoveredId(null)}
+      tabIndex={0}
       role="region"
-      aria-label="3D codebase atlas. Drag to orbit, scroll to zoom, and select a module or file."
+      aria-label="3D codebase globe. Drag to rotate, scroll to zoom. Arrow keys rotate; plus and minus zoom; Home resets."
+      onKeyDown={(event) => {
+        if (event.target !== event.currentTarget) return;
+        if (
+          [
+            "ArrowLeft",
+            "ArrowRight",
+            "ArrowUp",
+            "ArrowDown",
+            "+",
+            "=",
+            "-",
+            "Home",
+          ].includes(event.key)
+        )
+          event.preventDefault();
+        if (event.key === "ArrowLeft") rotate(-0.25);
+        if (event.key === "ArrowRight") rotate(0.25);
+        if (event.key === "ArrowUp") tilt(-0.2);
+        if (event.key === "ArrowDown") tilt(0.2);
+        if (event.key === "+" || event.key === "=") zoom(0.85);
+        if (event.key === "-") zoom(1.18);
+        if (event.key === "Home") home();
+      }}
     >
       {ready && (
         <ForceGraph3D<AtlasPoint, SceneLink>
@@ -328,27 +477,23 @@ export default function AtlasEngine({
           graphData={data}
           width={size.width}
           height={size.height}
-          backgroundColor="#1c1e1b"
+          backgroundColor="#0b1522"
           controlType="orbit"
           showNavInfo={false}
+          nodeVisibility={visible}
           nodeThreeObject={nodeObject}
           nodeLabel={(node) =>
-            `<span class="atlas-tooltip">${escape(node.name)}${node.kind === "file" ? `<small>${intent === "impact" ? "Trace dependents" : "Open source"}</small>` : ""}</span>`
+            `<span class="atlas-tooltip">${escape(node.name)}<small>${node.file ? (intent === "impact" ? "Trace dependents" : "Open source") : "Select to look inside"}</small></span>`
           }
-          linkColor={linkColor}
-          linkOpacity={0.4}
-          linkWidth={(link) =>
-            isHoveredLink(link) ? 1.3 : link.kind === "dependency" ? 0.55 : 0.12
+          linkVisibility={(link) =>
+            visible(points.get(endpoint(link.source))!) &&
+            visible(points.get(endpoint(link.target))!)
           }
-          linkDirectionalArrowLength={(link) =>
-            !impact && focused && link.kind === "dependency" ? 3 : 0
-          }
-          linkDirectionalArrowRelPos={0.88}
-          linkDirectionalArrowColor="#75d9ad"
+          linkThreeObject={linkObject}
+          linkPositionUpdate={() => true}
           onNodeClick={(node) => {
             if (node.file && intent === "explore") onSource(node.file);
-            else if (node.file) onSelect(node.id);
-            else if (node.componentId) onSelect(node.componentId);
+            else onSelect(node.id);
           }}
           onNodeHover={(node) => {
             setHoveredId(node?.id ?? null);
@@ -357,68 +502,64 @@ export default function AtlasEngine({
           }}
           onBackgroundClick={() => onSelect(null)}
           enableNodeDrag={false}
-          warmupTicks={reducedMotion ? 0 : 30}
-          cooldownTicks={reducedMotion ? 0 : 95}
-          d3VelocityDecay={0.5}
+          warmupTicks={0}
+          cooldownTicks={0}
         />
       )}
-      <div className="atlas-caption">
+      <div className="atlas-scene-top">
         <span>
-          {rootComponents.length} modules<span>·</span>
-          {model.nodes.filter((node) => node.kind === "file").length} files
+          <i /> {focused ? "Focused connections" : "System overview"}
         </span>
+        <button
+          className={showFiles ? "is-active" : ""}
+          onClick={() => setShowFiles((value) => !value)}
+          aria-pressed={showFiles}
+        >
+          <FileCode2 size={14} />
+          {showFiles ? "Hide files" : "Show all files"}
+        </button>
       </div>
       <div className="canvas-controls atlas-controls">
         <button
-          onClick={() => zoom(1.2)}
-          aria-label="Zoom out"
-          title="Zoom out"
+          onClick={() => rotate(-0.25)}
+          aria-label="Rotate atlas left"
+          title="Rotate left"
         >
+          <ArrowLeft size={15} />
+        </button>
+        <button
+          onClick={() => rotate(0.25)}
+          aria-label="Rotate atlas right"
+          title="Rotate right"
+        >
+          <ArrowRight size={15} />
+        </button>
+        <span className="control-divider" />
+        <button onClick={() => zoom(1.18)} aria-label="Zoom out">
           <Minus size={16} />
         </button>
-        <button onClick={() => zoom(0.82)} aria-label="Zoom in" title="Zoom in">
+        <button onClick={() => zoom(0.85)} aria-label="Zoom in">
           <Plus size={16} />
         </button>
-        <span className="control-divider" />
-        <button
-          onClick={fit}
-          aria-label="Fit atlas to view"
-          title="Fit to view"
-        >
+        <button onClick={fit} aria-label="Fit atlas to view">
           <Maximize size={15} />
         </button>
-        <span className="control-divider" />
-        <button onClick={home} aria-label="Reset atlas" title="Reset view">
+        <button onClick={home} aria-label="Reset atlas">
           <RotateCcw size={15} />
         </button>
       </div>
-      {hint && !selectedId && (
-        <div className="atlas-hint">
-          <span>
-            {intent === "impact"
-              ? "Select a module or file to trace dependents."
-              : "Drag to orbit. Select a module to focus."}
-          </span>
-          <button
-            onClick={() => setHint(false)}
-            aria-label="Dismiss atlas hint"
-          >
-            <X size={13} />
+      <div className="atlas-navigation-hint">
+        Drag to rotate <span>·</span> Scroll to zoom
+      </div>
+      <div className="atlas-scene-foot">
+        {visibleCount
+          ? `${visibleCount} source files visible`
+          : "Select a module to reveal its files"}
+        {selectedId && (
+          <button onClick={home}>
+            <Crosshair size={13} /> Show all modules
           </button>
-        </div>
-      )}
-      {selectedId && (
-        <button className="atlas-show-all" onClick={home}>
-          <Crosshair size={13} />
-          Show all
-        </button>
-      )}
-      <div className="atlas-keyboard-modules" aria-label="Atlas modules">
-        {rootComponents.map((module) => (
-          <button key={module.id} onClick={() => onSelect(module.id)}>
-            {module.name}
-          </button>
-        ))}
+        )}
       </div>
     </div>
   );

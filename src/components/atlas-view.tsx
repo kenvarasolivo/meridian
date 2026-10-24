@@ -2,11 +2,20 @@
 
 import dynamic from "next/dynamic";
 import { Component, type ReactNode } from "react";
-import { ArrowRight, Orbit } from "lucide-react";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Globe2,
+  Orbit,
+  ScanLine,
+  Workflow,
+} from "lucide-react";
 import { rootComponents, kindMeta } from "@/data/application";
 import type { SourceFile } from "@/lib/types";
 import type { AtlasModel } from "@/lib/atlas";
 import type { AtlasIntent } from "@/lib/impact";
+import { getModuleId } from "@/lib/atlas";
+import { componentIcons } from "./icons";
 
 export interface AtlasViewProps {
   model: AtlasModel;
@@ -70,29 +79,85 @@ export function AtlasFallback({
 }
 
 export function AtlasView(props: AtlasViewProps) {
+  const activeModule = props.selectedId?.startsWith("file:")
+    ? props.model.nodes.find((node) => node.id === props.selectedId)?.moduleId
+    : props.selectedId
+      ? getModuleId(props.selectedId)
+      : null;
   return (
     <div className="atlas-view-shell">
-      <div className="atlas-intent-switch" role="group" aria-label="Atlas mode">
-        <button
-          aria-pressed={props.intent === "explore"}
-          onClick={() => props.onIntentChange("explore")}
+      <header className="atlas-toolbar">
+        <div className="atlas-toolbar-title">
+          <Globe2 size={20} />
+          <div>
+            <strong>Your code, connected.</strong>
+            <span>
+              {props.intent === "impact"
+                ? "Choose a module or file to trace its dependents."
+                : "Choose a module. Discover what’s inside."}
+            </span>
+          </div>
+        </div>
+        <div
+          className="atlas-intent-switch"
+          role="group"
+          aria-label="Atlas mode"
         >
-          Explore
-        </button>
-        <button
-          aria-pressed={props.intent === "impact"}
-          onClick={() => props.onIntentChange("impact")}
+          <button
+            aria-pressed={props.intent === "explore"}
+            onClick={() => props.onIntentChange("explore")}
+          >
+            <Orbit size={14} /> Explore
+          </button>
+          <button
+            aria-pressed={props.intent === "impact"}
+            onClick={() => props.onIntentChange("impact")}
+          >
+            <ScanLine size={14} /> Impact
+          </button>
+        </div>
+      </header>
+      <div className="atlas-stage">
+        <AtlasBoundary
+          fallback={
+            <AtlasFallback onSelect={props.onSelect} onMap={props.onMap} />
+          }
         >
-          Impact
-        </button>
+          <AtlasEngine {...props} />
+        </AtlasBoundary>
       </div>
-      <AtlasBoundary
-        fallback={
-          <AtlasFallback onSelect={props.onSelect} onMap={props.onMap} />
-        }
-      >
-        <AtlasEngine {...props} />
-      </AtlasBoundary>
+      <nav className="atlas-module-dock" aria-label="Atlas modules">
+        <div className="atlas-dock-heading">
+          <span>Find a module</span>
+          <span>{rootComponents.length} modules</span>
+        </div>
+        <div className="atlas-module-list">
+          {rootComponents.map((module) => {
+            const Icon = componentIcons[module.kind];
+            return (
+              <button
+                key={module.id}
+                aria-label={`Focus ${module.name} on globe`}
+                aria-pressed={activeModule === module.id}
+                onClick={() =>
+                  props.onSelect(
+                    props.selectedId === module.id ? null : module.id,
+                  )
+                }
+              >
+                <Icon
+                  size={15}
+                  style={{ color: kindMeta[module.kind].color }}
+                />
+                <span>{module.name}</span>
+              </button>
+            );
+          })}
+        </div>
+        <button className="atlas-open-map" onClick={props.onMap}>
+          <Workflow size={14} /> Open 2D map <ArrowUpRight size={14} />
+        </button>
+      </nav>
     </div>
   );
 }

@@ -185,17 +185,24 @@ export function GraphCanvas(props: Props) {
           animated: highlighted && !reducedMotion,
           className: `${highlighted ? "highlighted-edge" : ""} ${dimmed ? "dimmed-edge" : ""}`,
           style: {
-            stroke: highlighted ? "#75d9ad" : "#525952",
+            stroke: highlighted
+              ? "var(--graph-edge-active, #75d9ad)"
+              : "var(--graph-edge, #525952)",
             strokeWidth: highlighted ? 1.8 : 1.2,
           },
           label: relationship.label,
           labelStyle: {
-            fill: highlighted ? "#9ae2bf" : "#a4aaa3",
+            fill: highlighted
+              ? "var(--graph-label-active, #9ae2bf)"
+              : "var(--graph-label, #a4aaa3)",
             fontSize: 12,
             fontFamily: "var(--font-sans)",
             fontWeight: 400,
           },
-          labelBgStyle: { fill: "#1d1f1b", fillOpacity: 1 },
+          labelBgStyle: {
+            fill: "var(--graph-label-ground, #1d1f1b)",
+            fillOpacity: 1,
+          },
           labelBgPadding: [7, 4] as [number, number],
           labelBgBorderRadius: 4,
           markerEnd: {

@@ -8,6 +8,7 @@ import {
   subgraphRelationships,
 } from "@/data/application";
 import type { SourceFile } from "./types";
+import { globeLocations, globePosition } from "./globe";
 
 export type AtlasPoint = {
   id: string;
@@ -36,15 +37,12 @@ export type AtlasLink = {
 
 export type AtlasModel = { nodes: AtlasPoint[]; links: AtlasLink[] };
 
-const centers: Record<string, [number, number, number]> = {
-  frontend: [-220, 15, 65],
-  api: [-25, 15, 0],
-  auth: [-55, 165, -55],
-  database: [180, 140, -20],
-  payments: [195, -30, 75],
-  jobs: [70, -185, -60],
-  notifications: [-165, -160, 30],
-};
+const centers: Record<string, [number, number, number]> = Object.fromEntries(
+  globeLocations.map((location) => [
+    location.id,
+    globePosition(location.lat, location.lng, 192),
+  ]),
+);
 
 export function getModuleId(componentId: string): string {
   let component = componentById[componentId];
@@ -70,16 +68,14 @@ function position(id: string, moduleId: string): [number, number, number] {
     seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
     return seed / 4294967296;
   };
-  const theta = random() * Math.PI * 2;
-  const vertical = random() * 2 - 1;
-  const radius = 30 + random() * 42;
-  const horizontal = Math.sqrt(1 - vertical * vertical);
-  const center = centers[moduleId];
-  return [
-    center[0] + radius * horizontal * Math.cos(theta),
-    center[1] + radius * vertical,
-    center[2] + radius * horizontal * Math.sin(theta),
-  ];
+  const location = globeLocations.find((location) => location.id === moduleId)!;
+  const angle = random() * Math.PI * 2;
+  const spread = 5 + random() * 13;
+  return globePosition(
+    location.lat + Math.sin(angle) * spread,
+    location.lng + Math.cos(angle) * spread,
+    196 + random() * 17,
+  );
 }
 
 /** Every point and edge comes from the example model. No decorative filler nodes. */
@@ -102,7 +98,9 @@ export function buildAtlasModel(): AtlasModel {
       x,
       y,
       z,
-      ...(isModule ? { fx: x, fy: y, fz: z } : {}),
+      fx: x,
+      fy: y,
+      fz: z,
     };
   });
   for (const file of project.files) {
@@ -119,6 +117,9 @@ export function buildAtlasModel(): AtlasModel {
       x,
       y,
       z,
+      fx: x,
+      fy: y,
+      fz: z,
     });
   }
   const links: AtlasLink[] = [

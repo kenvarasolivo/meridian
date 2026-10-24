@@ -8,6 +8,33 @@ import {
 } from "../src/data/application";
 import { buildAtlasModel, getAtlasFocus, getModuleId } from "../src/lib/atlas";
 import { explorerReducer } from "../src/hooks/use-explorer";
+import { globeArc } from "../src/lib/globe";
+
+test("globe layout stays anchored while camera orbit is independent of the data", () => {
+  for (const node of buildAtlasModel().nodes) {
+    assert.deepEqual([node.fx, node.fy, node.fz], [node.x, node.y, node.z]);
+    const radius = Math.hypot(node.x, node.y, node.z);
+    if (node.kind === "module") assert.ok(Math.abs(radius - 192) < 1e-9);
+    else assert.ok(radius >= 196 && radius <= 213);
+  }
+});
+
+test("globe routes preserve endpoints and stay outside the sphere, including opposite points", () => {
+  for (const end of [
+    [0, 192, 0],
+    [-192, 0, 0],
+    [-192 * Math.cos(0.01), 0, 192 * Math.sin(0.01)],
+  ] as [number, number, number][]) {
+    const start: [number, number, number] = [192, 0, 0];
+    const route = globeArc(start, end);
+    for (let axis = 0; axis < 3; axis++) {
+      assert.ok(Math.abs(route[0][axis] - start[axis]) < 1e-8);
+      assert.ok(Math.abs(route.at(-1)![axis] - end[axis]) < 1e-8);
+    }
+    assert.ok(route.every((point) => Math.hypot(...point) >= 192 - 1e-8));
+    assert.ok(Math.hypot(...route[Math.floor(route.length / 2)]) > 210);
+  }
+});
 
 test("the atlas contains only real example components and unique source files", () => {
   const model = buildAtlasModel();

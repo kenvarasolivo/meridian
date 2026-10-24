@@ -86,6 +86,15 @@ export function Explorer() {
   useEffect(() => {
     const openAtlasLink = () => {
       const [view, parameters] = window.location.hash.slice(1).split("?");
+      if (view === "map" || view === "architecture" || view === "domain") {
+        dispatch({ type: "mode", mode: view });
+      }
+      if (view === "workflow") {
+        const id = new URLSearchParams(parameters).get("id");
+        if (id && Object.hasOwn(workflowById, id)) {
+          dispatch({ type: "workflow", id });
+        }
+      }
       if (view === "atlas") {
         dispatch({ type: "mode", mode: "atlas" });
         const params = new URLSearchParams(parameters);

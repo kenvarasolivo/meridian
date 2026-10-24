@@ -1,0 +1,376 @@
+/* Atlas keeps the app's solid, borderless surfaces; depth comes from the globe. */
+.workspace-theme .atlas-view-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: #0b1522;
+}
+.workspace-theme .atlas-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 18px 22px;
+  background: #111f30;
+  flex-shrink: 0;
+}
+.atlas-toolbar-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.atlas-toolbar-title > svg {
+  color: #a8c9ee;
+}
+.atlas-toolbar-title strong {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #e1ecfa;
+}
+.atlas-toolbar-title span {
+  display: block;
+  font-size: 11px;
+  color: #95aac4;
+  margin-top: 4px;
+}
+.workspace-theme .atlas-toolbar .atlas-intent-switch {
+  display: flex;
+  gap: 4px;
+  position: static;
+  padding: 4px;
+  background: #0a1625;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+.workspace-theme .atlas-intent-switch > button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 13px;
+  height: 32px;
+  border-radius: 5px;
+  color: #8fa6c1;
+  font-size: 11px;
+}
+.workspace-theme .atlas-intent-switch > button[aria-pressed="true"] {
+  background: #2a435f;
+  color: #e2efff;
+  box-shadow: 0 3px 10px #02071140;
+}
+.workspace-theme .atlas-intent-switch > button:hover {
+  color: #e2efff;
+}
+.atlas-stage {
+  position: relative;
+  flex: 1;
+  min-height: 240px;
+}
+.workspace-theme .atlas-canvas {
+  background: #0b1522;
+  cursor: grab;
+  border-radius: 0;
+}
+.workspace-theme .atlas-canvas:focus-visible {
+  outline: 2px solid #b2d4ff;
+  outline-offset: -4px;
+}
+.atlas-scene-top {
+  position: absolute;
+  top: 19px;
+  left: 22px;
+  right: 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  pointer-events: none;
+}
+.atlas-scene-top > span {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 11px;
+  color: #8fa6c1;
+}
+.atlas-scene-top i {
+  height: 5px;
+  width: 5px;
+  border-radius: 50%;
+  background: #95c3ff;
+}
+.atlas-scene-top button {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  color: #a6bedc;
+  padding: 9px 12px;
+  border-radius: 6px;
+  background: #172b40;
+  pointer-events: auto;
+  font-size: 11px;
+}
+.atlas-scene-top button:hover,
+.atlas-scene-top button.is-active {
+  background: #2a4562;
+  color: #e5f1ff;
+}
+.atlas-scene-foot {
+  position: absolute;
+  bottom: 62px;
+  left: 22px;
+  right: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  color: #8098b5;
+  font-size: 11px;
+  pointer-events: none;
+}
+.atlas-scene-foot button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #a9caee;
+  pointer-events: auto;
+  font-size: 11px;
+}
+.atlas-scene-foot button:hover {
+  color: #edf6ff;
+}
+.workspace-theme .atlas-controls {
+  display: flex;
+  left: 22px;
+  bottom: 15px;
+}
+.atlas-navigation-hint {
+  position: absolute;
+  bottom: 27px;
+  right: 22px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  color: #92a7c2;
+  pointer-events: none;
+}
+.atlas-navigation-hint > span {
+  color: #526c8d;
+}
+.atlas-module-dock {
+  padding: 16px 22px 18px;
+  background: #111f30;
+  position: relative;
+  flex-shrink: 0;
+}
+.atlas-dock-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  color: #bfd2e9;
+  padding-right: 150px;
+}
+.atlas-dock-heading > span:last-child {
+  color: #8099b6;
+  font-size: 11px;
+}
+.atlas-module-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 13px;
+}
+.workspace-theme .atlas-module-list > button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #1c3047;
+  border-radius: 6px;
+  color: #b4c9e2;
+  font-size: 11px;
+  flex: 1 0 auto;
+  box-shadow: 0 3px 9px #02071130;
+}
+.workspace-theme .atlas-module-list > button:hover {
+  background: #2a445f;
+  color: #eef6ff;
+}
+.workspace-theme .atlas-module-list > button[aria-pressed="true"] {
+  background: #34577b;
+  color: #eff7ff;
+}
+.workspace-theme .atlas-open-map {
+  position: absolute;
+  right: 22px;
+  top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  color: #9db9db;
+}
+.workspace-theme .atlas-open-map:hover {
+  color: #e4efff;
+}
+.workspace-theme .atlas-stage .atlas-tooltip {
+  background: #20374f;
+  border: 0;
+  color: #e4efff;
+  box-shadow: 0 8px 25px #0006;
+}
+.workspace-theme .atlas-stage .atlas-tooltip small {
+  color: #a8bfdc;
+}
+
+/* The landing globe shares the same drag / arrow / reset vocabulary. */
+.landing .code-globe {
+  cursor: grab;
+  touch-action: pan-y;
+}
+.landing-globe-controls {
+  position: absolute;
+  top: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  z-index: 3;
+}
+.landing-globe-controls > span {
+  color: #9cb0ca;
+  font-size: 11px;
+  padding-right: 8px;
+  white-space: nowrap;
+}
+.landing-globe-controls > button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  background: #142338;
+  border-radius: 4px;
+  color: #adc9ee;
+}
+.landing-globe-controls > button:hover {
+  color: #edf6ff;
+  background: #2a425f;
+}
+.landing-globe-controls > button:active {
+  background: #34577b;
+}
+.workspace-theme .project-switcher-text > span {
+  color: #a9bed7;
+}
+@media (max-width: 800px) {
+  .atlas-toolbar-title span {
+    max-width: 230px;
+  }
+  .atlas-toolbar-title > svg {
+    display: none;
+  }
+  .atlas-navigation-hint {
+    font-size: 11px;
+    gap: 5px;
+  }
+  .workspace-theme .atlas-module-list > button {
+    font-size: 11px;
+    padding: 10px;
+  }
+}
+@media (max-width: 600px) {
+  .workspace-theme .atlas-toolbar {
+    padding: 14px;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .atlas-toolbar-title strong {
+    font-size: 12px;
+  }
+  .atlas-toolbar-title span {
+    font-size: 11px;
+    max-width: 165px;
+    line-height: 1.5;
+  }
+  .workspace-theme .atlas-intent-switch > button {
+    padding: 0 8px;
+    height: 30px;
+    gap: 5px;
+    font-size: 11px;
+  }
+  .workspace-theme .atlas-intent-switch > button > svg {
+    width: 12px;
+  }
+  .atlas-scene-top {
+    left: 14px;
+    right: 14px;
+    top: 12px;
+  }
+  .atlas-scene-top > span {
+    font-size: 11px;
+  }
+  .atlas-scene-top button {
+    padding: 8px;
+    font-size: 11px;
+  }
+  .atlas-scene-foot {
+    left: 14px;
+    right: 14px;
+    bottom: 60px;
+    font-size: 11px;
+    gap: 10px;
+  }
+  .atlas-scene-foot button {
+    font-size: 11px;
+  }
+  .workspace-theme .atlas-controls {
+    left: 14px;
+    bottom: 13px;
+  }
+  .atlas-navigation-hint {
+    display: none;
+  }
+  .atlas-module-dock {
+    padding: 14px;
+  }
+  .atlas-module-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    margin-top: 12px;
+  }
+  .workspace-theme .atlas-module-list > button {
+    justify-content: flex-start;
+    padding: 9px 10px;
+    min-height: 34px;
+  }
+  .workspace-theme .atlas-open-map {
+    top: 14px;
+    right: 14px;
+    font-size: 11px;
+  }
+  .atlas-dock-heading {
+    font-size: 11px;
+    padding-right: 112px;
+    gap: 7px;
+  }
+  .atlas-dock-heading > span:last-child {
+    font-size: 11px;
+  }
+  .landing-globe-controls {
+    top: 6%;
+  }
+  .landing-globe-controls > button {
+    width: 34px;
+    height: 34px;
+  }
+  .landing-globe-controls > span {
+    font-size: 11px;
+  }
+}

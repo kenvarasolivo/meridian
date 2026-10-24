@@ -54,7 +54,7 @@ export function Modal({
   }, [onClose]);
   return createPortal(
     <div
-      className="modal-backdrop"
+      className="workspace-theme modal-backdrop"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
