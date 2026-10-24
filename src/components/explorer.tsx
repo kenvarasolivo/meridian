@@ -35,7 +35,7 @@ import { AtlasFileInspector } from "./atlas-file-inspector";
 import { SearchDialog } from "./search-dialog";
 import { SourceDialog } from "./source-dialog";
 import { HelpDialog } from "./help-dialog";
-import { WorkflowPicker, WorkflowShelf } from "./workflows";
+import { WorkflowPicker } from "./workflows";
 
 const modes: {
   id: ViewMode;
@@ -99,7 +99,7 @@ export function Explorer() {
       if (view === "atlas") {
         dispatch({ type: "mode", mode: "atlas" });
         const params = new URLSearchParams(parameters);
-        setAtlasIntent(params.get("mode") === "impact" ? "impact" : "explore");
+        setAtlasIntent(["dependencies", "impact"].includes(params.get("mode") ?? "") ? "impact" : "explore");
         const file = project.files.find(
           (file) => file.path === params.get("file"),
         );
@@ -415,6 +415,13 @@ export function Explorer() {
                 )}
               </AnimatePresence>
               <div className="graph-region">
+                <motion.div
+                  className="graph-view-transition"
+                  key={state.mode}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.24, ease: "easeOut" }}
+                >
                 {state.mode === "atlas" ? (
                   <AtlasView
                     model={atlasModel}
@@ -443,8 +450,8 @@ export function Explorer() {
                     />
                   </ReactFlowProvider>
                 )}
+                </motion.div>
               </div>
-              <WorkflowShelf onStart={startWorkflow} />
             </main>
             {impact ? (
               <ImpactPanel
@@ -508,10 +515,10 @@ export function Explorer() {
                 ? `Step ${state.step + 1} of ${workflow.steps.length}`
                 : state.selectedId
                   ? impact
-                    ? "Change impact"
+                    ? "Dependencies"
                     : "Component details"
                   : impact
-                    ? "Change impact"
+                    ? "Dependencies"
                     : "Details"}
             </span>
           </button>

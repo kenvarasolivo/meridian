@@ -55,7 +55,7 @@ export function SourceDialog({
           {onShowImpact && (
             <button className="text-button" onClick={onShowImpact}>
               <GitBranch size={14} />
-              Show impact
+              Show dependencies
             </button>
           )}
           <button className="text-button" onClick={() => void copy()}>

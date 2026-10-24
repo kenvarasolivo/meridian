@@ -16,7 +16,7 @@ export function AtlasFileInspector({ model, file, mobileOpen, onClose, onSelect,
   return (
     <aside className={`inspector atlas-file-inspector ${mobileOpen ? "mobile-open" : ""}`} aria-label="Source file inspector">
       <div className="inspector-header"><span>Source file</span><button className="icon-button" aria-label="Clear file selection" onClick={onClose}><X size={15} /></button></div>
-      <div className="inspector-scroll">
+      <div className="inspector-scroll" key={file.path}>
         <div className="component-detail-heading"><span className="detail-icon"><FileCode2 size={27} /></span><h2>{atlasNodeLabel(target)}</h2><p className="atlas-file-path">{file.path}</p></div>
         <section className="inspector-section"><p>{file.description}</p></section>
         <section className="inspector-section"><h3>Module</h3><button className="atlas-file-module" onClick={() => onSelect(target.moduleId)}>{componentById[target.moduleId].name}<ArrowUpRight size={14} /></button></section>
@@ -30,7 +30,7 @@ export function AtlasFileInspector({ model, file, mobileOpen, onClose, onSelect,
           {!links.length && <p>No direct connections in this example.</p>}
         </section>
       </div>
-      <div className="inspector-footer"><button className="secondary-button explore-button" onClick={onImpact}><ScanLine size={15} />Show impact<ArrowRight size={15} /></button><button className="primary-button explore-button" onClick={() => onSource(file)}><FileCode2 size={15} />Open source<ArrowUpRight size={15} /></button></div>
+      <div className="inspector-footer"><button className="secondary-button explore-button" onClick={onImpact}><ScanLine size={15} />Show dependencies<ArrowRight size={15} /></button><button className="primary-button explore-button" onClick={() => onSource(file)}><FileCode2 size={15} />Open source<ArrowUpRight size={15} /></button></div>
     </aside>
   );
 }

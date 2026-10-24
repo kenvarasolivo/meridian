@@ -9,8 +9,29 @@ import {
 import { atlasGroupColors, buildAtlasModel, getAtlasFocus, getModuleId } from "../src/lib/atlas";
 import { explorerReducer } from "../src/hooks/use-explorer";
 import { globeArc } from "../src/lib/globe";
-import { initialNetworkCamera, layoutAtlas, projectNetworkPoint, rotateNetwork, zoomNetwork } from "../src/lib/atlas-layout";
+import { initialNetworkCamera, interpolateNetworkCamera, layoutAtlas, projectNetworkPoint, rotateNetwork, zoomNetwork } from "../src/lib/atlas-layout";
 import { getAtlasOverviewLinks, getAtlasNeighborhood, searchAtlasNodes } from "../src/lib/atlas-discovery";
+
+test("camera flights move continuously over the shortest orbit and clamp their endpoints", () => {
+  const from = { yaw: Math.PI - 0.1, pitch: -0.4, zoom: 1 };
+  const to = { yaw: -Math.PI + 0.1, pitch: 0.5, zoom: 1.8 };
+  assert.deepEqual(interpolateNetworkCamera(from, to, -1), from);
+  const middle = interpolateNetworkCamera(from, to, 0.5);
+  assert.ok(Math.abs(middle.yaw - Math.PI) < 1e-10, "Cross the seam instead of spinning almost a full turn");
+  assert.ok(Math.abs(middle.pitch - 0.05) < 1e-10);
+  assert.equal(middle.zoom, 1.4);
+  let previous = from;
+  for (let step = 1; step <= 100; step++) {
+    const next = interpolateNetworkCamera(from, to, step / 100);
+    assert.ok(next.yaw >= previous.yaw && next.yaw - previous.yaw < 0.01);
+    assert.ok(next.pitch >= previous.pitch && next.zoom >= previous.zoom);
+    previous = next;
+  }
+  const end = interpolateNetworkCamera(from, to, 2);
+  assert.ok(Math.abs(end.yaw - (Math.PI + 0.1)) < 1e-10);
+  assert.equal(end.pitch, to.pitch);
+  assert.equal(end.zoom, to.zoom);
+});
 
 test("the hollow globe preserves every real node in stable three-dimensional clusters", () => {
   const model = buildAtlasModel();

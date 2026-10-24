@@ -41,14 +41,14 @@ export function ImpactPanel({
   return (
     <aside
       className={`inspector impact-panel ${mobileOpen ? "mobile-open" : ""}`}
-      aria-label="Change impact inspector"
+      aria-label="Dependencies inspector"
     >
       <div className="inspector-header">
-        <span>Change impact</span>
+        <span>Dependencies</span>
         <button
           className="icon-button"
           onClick={onClose}
-          aria-label="Close change impact"
+          aria-label="Close dependencies"
         >
           <X size={15} />
         </button>
@@ -63,7 +63,7 @@ export function ImpactPanel({
           </h2>
           {target.file && <code>{target.file.path}</code>}
         </div>
-        <div className="impact-counts" aria-label="Potential dependents">
+        <div className="impact-counts" aria-label="Dependents">
           <span>
             <i className="impact-direct-dot" />
             <strong>{impact.direct.length}</strong> direct
@@ -115,8 +115,8 @@ export function ImpactPanel({
           </div>
         )}
         <p className="impact-note">
-          Potential impact from example dependencies. This does not confirm
-          breakage.
+          Shows code that depends on this selection, directly or indirectly,
+          in the example codebase.
         </p>
       </div>
       <div className="inspector-footer">
@@ -179,7 +179,7 @@ function DependentRow({
       <button
         className="impact-dependent-trigger"
         aria-expanded={open}
-        aria-label={`Why ${node.name} may be affected`}
+        aria-label={`Show dependency path for ${node.name}`}
         onClick={() => setOpen(!open)}
       >
         <PointIcon point={node} />
@@ -194,7 +194,7 @@ function DependentRow({
           <div className="impact-path-origin">
             <i />
             {target.file ? target.name.split("/").at(-1) : target.name}
-            <small>changed</small>
+            <small>selected</small>
           </div>
           <ol>
             {dependent.path.map((hop) => {

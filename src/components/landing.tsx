@@ -42,7 +42,7 @@ const faqs = [
   {
     question: "What can I explore in the demo?",
     answer:
-      "Acme Commerce is a fictional Next.js storefront with seven top-level modules. Explore its architecture, inspect illustrative source files, follow login and checkout, or trace dependencies in the impact view.",
+      "Acme Commerce is a fictional Next.js storefront with seven top-level modules. Explore its architecture, inspect illustrative source files, follow login and checkout, or trace what relies on each module in the Dependencies view.",
   },
   {
     question: "Can I connect my own repository?",
@@ -50,7 +50,7 @@ const faqs = [
       "This version is a local, frontend-only prototype using an example codebase. Repository import and automated analysis are not available yet. You can explore every demo view without an account or API key.",
   },
   {
-    question: "Does impact analysis predict what will break?",
+    question: "Does the Dependencies view predict what will break?",
     answer:
       "It shows potential dependents using the example model’s imports, source references, and declared dependencies. Every result has a traceable path. It does not predict runtime failures or replace tests.",
   },
@@ -619,8 +619,8 @@ export function Landing() {
               before a change, with an explicit path back to the code.
             </p>
             <Link
-              href="/explore#atlas?mode=impact&file=lib/auth.ts"
-              aria-label="Inspect authentication change impact"
+              href="/explore#atlas?mode=dependencies&file=lib/auth.ts"
+              aria-label="Inspect authentication dependencies"
             >
               <ArrowUpRight size={22} />
             </Link>

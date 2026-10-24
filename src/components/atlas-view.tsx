@@ -90,10 +90,10 @@ export function AtlasView(props: AtlasViewProps) {
         <div className="atlas-toolbar-title">
           <Globe2 size={20} />
           <div>
-            <strong>Your code, connected.</strong>
+            <strong>{props.intent === "impact" ? "Dependencies" : "Your code, connected."}</strong>
             <span>
               {props.intent === "impact"
-                ? "Choose a module or file to trace its dependents."
+                ? "Choose a module or file to see what depends on it."
                 : "Choose a module. Discover what’s inside."}
             </span>
           </div>
@@ -113,7 +113,7 @@ export function AtlasView(props: AtlasViewProps) {
             aria-pressed={props.intent === "impact"}
             onClick={() => props.onIntentChange("impact")}
           >
-            <ScanLine size={14} /> Impact
+            <ScanLine size={14} /> Dependencies
           </button>
         </div>
       </header>

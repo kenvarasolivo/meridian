@@ -7,52 +7,12 @@ import {
   ChevronRight,
   Clock3,
   FileCode2,
-  Route,
 } from "lucide-react";
 import { workflows } from "@/data/workflows";
 import { componentById, kindMeta } from "@/data/application";
 import type { ExplanationLevel, SourceFile, Workflow } from "@/lib/types";
 import { workflowIcons } from "./icons";
 import { Modal } from "./modal";
-
-export function WorkflowShelf({ onStart }: { onStart: (id: string) => void }) {
-  return (
-    <section className="workflow-shelf" aria-label="Guided workflows">
-      <div className="shelf-heading">
-        <span>
-          <Route size={15} />
-          Trace
-        </span>
-      </div>
-      <div className="workflow-cards">
-        {workflows.map((workflow) => {
-          const Icon = workflowIcons[workflow.id];
-          return (
-            <button
-              className="workflow-card"
-              key={workflow.id}
-              title={workflow.question}
-              onClick={() => onStart(workflow.id)}
-            >
-              <Icon size={18} strokeWidth={1.6} />
-              <span>
-                <strong>
-                  {
-                    {
-                      login: "Login",
-                      checkout: "Checkout",
-                      notification: "Notifications",
-                    }[workflow.id]
-                  }
-                </strong>
-              </span>
-            </button>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
 
 export function WorkflowPicker({
   onStart,

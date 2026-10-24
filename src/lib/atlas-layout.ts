@@ -3,6 +3,18 @@ import { globePosition, type GlobeVector } from "./globe";
 
 export type NetworkCamera = { yaw: number; pitch: number; zoom: number };
 export const initialNetworkCamera: NetworkCamera = { yaw: 0, pitch: 0, zoom: 1 };
+
+/** Ease along the shortest orbit, even when the camera crosses the +/- PI seam. */
+export function interpolateNetworkCamera(from: NetworkCamera, to: NetworkCamera, progress: number): NetworkCamera {
+  const t = Math.max(0, Math.min(1, progress));
+  const eased = t * t * t * (t * (t * 6 - 15) + 10);
+  const yawDelta = Math.atan2(Math.sin(to.yaw - from.yaw), Math.cos(to.yaw - from.yaw));
+  return {
+    yaw: from.yaw + yawDelta * eased,
+    pitch: from.pitch + (to.pitch - from.pitch) * eased,
+    zoom: from.zoom + (to.zoom - from.zoom) * eased,
+  };
+}
 const regions: Record<string, [number, number]> = {
   frontend: [35, -42],
   api: [8, 15],

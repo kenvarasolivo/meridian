@@ -62,9 +62,9 @@ export default function AtlasEngine({ model, intent, selectedId, onSelect, onMap
       <div className="atlas-navigation-hint">Drag to rotate <span>·</span> Scroll to zoom</div>
       <div className="atlas-scene-foot">
         <span>{impact
-          ? `${impact.affectedIds.size} potential ${impact.affectedIds.size === 1 ? "dependent" : "dependents"}`
+          ? `${impact.affectedIds.size} ${impact.affectedIds.size === 1 ? "dependent" : "dependents"}`
           : intent === "impact"
-            ? "Select a module or file to trace dependents"
+            ? "Select a module or file to see what depends on it"
             : selected ? `${atlasNodeLabel(selected)} · ${neighborhood.ids.size - 1} connected nodes` : `${model.nodes.filter((node) => node.kind === "module").length} modules · ${visibleCount} source files`}</span>
         {selectedId && <button onClick={home}><Crosshair size={13} /> Show all modules</button>}
       </div>

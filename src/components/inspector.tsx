@@ -103,7 +103,7 @@ export function Inspector(props: Props) {
           Developer
         </button>
       </div>
-      <div className="inspector-scroll">
+      <div className="inspector-scroll" key={props.workflow ? `${props.workflow.id}:${props.step}` : props.selectedId}>
         {props.workflow ? (
           <WorkflowPanel
             workflow={props.workflow}
@@ -261,7 +261,7 @@ export function Inspector(props: Props) {
               onClick={props.onShowImpact}
             >
               <Braces size={14} />
-              Show impact
+              Show dependencies
               <ArrowRight size={13} />
             </button>
           )}

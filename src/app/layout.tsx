@@ -8,6 +8,7 @@ import "./landing.css";
 import "./workspace-brand.css";
 import "./globe-atlas.css";
 import "./atlas-network.css";
+import "./motion.css";
 
 export const metadata: Metadata = {
   title: "Meridian — Complex code. Made clear.",

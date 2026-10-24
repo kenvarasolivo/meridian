@@ -95,7 +95,7 @@ test("file details explain connections and expose source and impact actions", ()
   assert.equal(selected, "file:middleware.ts");
   fireEvent.click(panel.getByRole("button", { name: "Open source" }));
   assert.equal(opened, true);
-  fireEvent.click(panel.getByRole("button", { name: "Show impact" }));
+  fireEvent.click(panel.getByRole("button", { name: "Show dependencies" }));
   assert.equal(impact, true);
 });
 
@@ -145,7 +145,7 @@ test("the atlas module dock focuses a module, returns to overview, and exposes i
   fireEvent.click(dock.getByRole("button", { name: "Focus API in atlas" }));
   assert.equal(selection, "api");
   fireEvent.click(
-    within(document.body).getByRole("button", { name: "Impact" }),
+    within(document.body).getByRole("button", { name: "Dependencies" }),
   );
   assert.equal(intent, "impact");
   fireEvent.click(dock.getByRole("button", { name: "Open 2D map" }));
@@ -183,12 +183,12 @@ test("source inspection can trace impact, explain a path, and return to explorat
   let panel = body.getByRole("complementary", { name: "Component inspector" });
   fireEvent.click(within(panel).getByRole("button", { name: "lib/auth.ts" }));
   const dialog = body.getByRole("dialog", { name: "Source file lib/auth.ts" });
-  fireEvent.click(within(dialog).getByRole("button", { name: "Show impact" }));
-  panel = body.getByRole("complementary", { name: "Change impact inspector" });
+  fireEvent.click(within(dialog).getByRole("button", { name: "Show dependencies" }));
+  panel = body.getByRole("complementary", { name: "Dependencies inspector" });
   assert.ok(within(panel).getByRole("heading", { name: "auth.ts" }));
   fireEvent.click(
     within(panel).getByRole("button", {
-      name: "Why middleware.ts may be affected",
+      name: "Show dependency path for middleware.ts",
     }),
   );
   assert.ok(within(panel).getByText("middleware.ts imports lib/auth.ts."));
@@ -196,11 +196,11 @@ test("source inspection can trace impact, explain a path, and return to explorat
   fireEvent.click(modes.getByRole("button", { name: "Explore" }));
   panel = body.getByRole("complementary", { name: "Component inspector" });
   assert.ok(within(panel).getByRole("heading", { name: "Authentication" }));
-  fireEvent.click(within(panel).getByRole("button", { name: "Show impact" }));
-  panel = body.getByRole("complementary", { name: "Change impact inspector" });
+  fireEvent.click(within(panel).getByRole("button", { name: "Show dependencies" }));
+  panel = body.getByRole("complementary", { name: "Dependencies inspector" });
   fireEvent.click(within(panel).getByText("Indirect dependents"));
   fireEvent.click(
-    within(panel).getByRole("button", { name: "Why Frontend may be affected" }),
+    within(panel).getByRole("button", { name: "Show dependency path for Frontend" }),
   );
   assert.ok(
     within(panel).getByText("Frontend depends on API (sends requests)."),
@@ -210,7 +210,7 @@ test("source inspection can trace impact, explain a path, and return to explorat
   );
   assert.ok(body.getByRole("button", { name: "Back one level" }));
   assert.equal(
-    body.queryByRole("complementary", { name: "Change impact inspector" }),
+    body.queryByRole("complementary", { name: "Dependencies inspector" }),
     null,
   );
 });
