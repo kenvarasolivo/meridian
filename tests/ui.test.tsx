@@ -56,14 +56,82 @@ const { HelpDialog } = await import("../src/components/help-dialog");
 const { workflows } = await import("../src/data/workflows");
 const { sources } = await import("../src/data/sources");
 const { Explorer } = await import("../src/components/explorer");
+const { AtlasFallback } = await import("../src/components/atlas-view");
 
 afterEach(() => {
   cleanup();
 });
 
+test("browsers without WebGL can select modules or return to the map", () => {
+  let selected = "";
+  let returned = false;
+  render(
+    <AtlasFallback
+      onSelect={(id) => {
+        selected = id ?? "";
+      }}
+      onMap={() => {
+        returned = true;
+      }}
+    />,
+  );
+  const body = within(document.body);
+  fireEvent.click(body.getByRole("button", { name: "Authentication" }));
+  assert.equal(selected, "auth");
+  fireEvent.click(body.getByRole("button", { name: /Open map/ }));
+  assert.equal(returned, true);
+});
+
+test("source inspection can trace impact, explain a path, and return to exploration", () => {
+  render(<Explorer />);
+  const body = within(document.body);
+  fireEvent.click(body.getByRole("button", { name: "Authentication" }));
+  let panel = body.getByRole("complementary", { name: "Component inspector" });
+  fireEvent.click(within(panel).getByRole("button", { name: "lib/auth.ts" }));
+  const dialog = body.getByRole("dialog", { name: "Source file lib/auth.ts" });
+  fireEvent.click(within(dialog).getByRole("button", { name: "Show impact" }));
+  panel = body.getByRole("complementary", { name: "Change impact inspector" });
+  assert.ok(within(panel).getByRole("heading", { name: "auth.ts" }));
+  fireEvent.click(
+    within(panel).getByRole("button", {
+      name: "Why middleware.ts may be affected",
+    }),
+  );
+  assert.ok(within(panel).getByText("middleware.ts imports lib/auth.ts."));
+  const modes = within(body.getByRole("group", { name: "Atlas mode" }));
+  fireEvent.click(modes.getByRole("button", { name: "Explore" }));
+  panel = body.getByRole("complementary", { name: "Component inspector" });
+  assert.ok(within(panel).getByRole("heading", { name: "Authentication" }));
+  fireEvent.click(within(panel).getByRole("button", { name: "Show impact" }));
+  panel = body.getByRole("complementary", { name: "Change impact inspector" });
+  fireEvent.click(within(panel).getByText("Indirect dependents"));
+  fireEvent.click(
+    within(panel).getByRole("button", { name: "Why Frontend may be affected" }),
+  );
+  assert.ok(
+    within(panel).getByText("Frontend depends on API (sends requests)."),
+  );
+  fireEvent.click(
+    within(panel).getByRole("button", { name: "Explore deeper" }),
+  );
+  assert.ok(body.getByRole("button", { name: "Back one level" }));
+  assert.equal(
+    body.queryByRole("complementary", { name: "Change impact inspector" }),
+    null,
+  );
+});
+
 test("the workspace reveals details on selection and hides them when exploring deeper", () => {
   render(<Explorer />);
   const body = within(document.body);
+  assert.equal(
+    body.getAllByRole("tab")[0].textContent,
+    "Atlas",
+  );
+  assert.equal(
+    body.getByRole("tab", { name: "Atlas" }).getAttribute("aria-selected"),
+    "true",
+  );
   assert.equal(
     body.queryByRole("complementary", { name: "Component inspector" }),
     null,

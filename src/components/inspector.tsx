@@ -12,7 +12,7 @@ import {
   X,
 } from "lucide-react";
 import { componentById, domainEntities, kindMeta } from "@/data/application";
-import { getGraphModel } from "@/lib/layout";
+import { getComponentScope, getGraphModel } from "@/lib/layout";
 import type {
   DomainEntity,
   ExplanationLevel,
@@ -39,6 +39,7 @@ interface Props {
   onStep: (step: number) => void;
   onEndWorkflow: () => void;
   onCloseMobile: () => void;
+  onShowImpact?: () => void;
 }
 
 export function Inspector(props: Props) {
@@ -46,7 +47,12 @@ export function Inspector(props: Props) {
     ? (componentById[props.selectedId] ??
       domainEntities.find((entity) => entity.id === props.selectedId))
     : null;
-  const model = getGraphModel(props.mode, props.scope);
+  const model = getGraphModel(
+    props.mode,
+    props.mode === "atlas" && selected
+      ? getComponentScope(selected.id)
+      : props.scope,
+  );
   const relationships = selected
     ? model.relationships.filter(
         (r) => r.source === selected.id || r.target === selected.id,
@@ -249,7 +255,18 @@ export function Inspector(props: Props) {
       </div>
       {!props.workflow && selected && (
         <div className="inspector-footer">
-          {selected.children?.length && props.mode === "map" ? (
+          {props.onShowImpact && (
+            <button
+              className="inspector-impact-action"
+              onClick={props.onShowImpact}
+            >
+              <Braces size={14} />
+              Show impact
+              <ArrowRight size={13} />
+            </button>
+          )}
+          {selected.children?.length &&
+          (props.mode === "map" || props.mode === "atlas") ? (
             <button
               className="primary-button explore-button"
               onClick={() => props.onExplore(selected.id)}

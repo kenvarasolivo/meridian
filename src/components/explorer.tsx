@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ReactFlowProvider } from "@xyflow/react";
 import { AnimatePresence, motion, MotionConfig } from "framer-motion";
 import {
@@ -9,6 +9,7 @@ import {
   ChevronRight,
   Menu,
   Network,
+  Orbit,
   PanelRightOpen,
   Search,
   Workflow,
@@ -25,6 +26,10 @@ import type {
 } from "@/lib/types";
 import { Sidebar } from "./sidebar";
 import { GraphCanvas } from "./graph-canvas";
+import { AtlasView } from "./atlas-view";
+import { ImpactPanel } from "./impact-panel";
+import { buildAtlasModel } from "@/lib/atlas";
+import { getChangeImpact, type AtlasIntent } from "@/lib/impact";
 import { Inspector } from "./inspector";
 import { SearchDialog } from "./search-dialog";
 import { SourceDialog } from "./source-dialog";
@@ -37,6 +42,7 @@ const modes: {
   short: string;
   icon: typeof Network;
 }[] = [
+  { id: "atlas", label: "3D codebase atlas", short: "Atlas", icon: Orbit },
   { id: "map", label: "Interactive map", short: "Map", icon: Network },
   {
     id: "architecture",
@@ -57,6 +63,46 @@ export function Explorer() {
   const [source, setSource] = useState<SourceFile | null>(null);
   const [helpOpen, setHelpOpen] = useState(false);
   const [tourFinished, setTourFinished] = useState(false);
+  const atlasModel = useMemo(buildAtlasModel, []);
+  const [atlasIntent, setAtlasIntent] = useState<AtlasIntent>("explore");
+  const [atlasFile, setAtlasFile] = useState<SourceFile | null>(null);
+  const atlasTarget =
+    state.mode === "atlas" && atlasFile
+      ? `file:${atlasFile.path}`
+      : state.selectedId;
+  const impact = useMemo(
+    () =>
+      state.mode === "atlas" && atlasIntent === "impact" && atlasTarget
+        ? getChangeImpact(atlasModel, atlasTarget)
+        : null,
+    [state.mode, atlasIntent, atlasTarget, atlasModel],
+  );
+  useEffect(() => {
+    if (state.mode !== "atlas") {
+      setAtlasFile(null);
+      setAtlasIntent("explore");
+    }
+  }, [state.mode]);
+  useEffect(() => {
+    const openAtlasLink = () => {
+      const [view, parameters] = window.location.hash.slice(1).split("?");
+      if (view === "atlas") {
+        dispatch({ type: "mode", mode: "atlas" });
+        const params = new URLSearchParams(parameters);
+        setAtlasIntent(params.get("mode") === "impact" ? "impact" : "explore");
+        const file = project.files.find(
+          (file) => file.path === params.get("file"),
+        );
+        setAtlasFile(file ?? null);
+        const moduleId = params.get("module");
+        if (moduleId && Object.hasOwn(componentById, moduleId))
+          dispatch({ type: "select", id: moduleId });
+      }
+    };
+    openAtlasLink();
+    window.addEventListener("hashchange", openAtlasLink);
+    return () => window.removeEventListener("hashchange", openAtlasLink);
+  }, [dispatch]);
   const workflow = state.workflowId ? workflowById[state.workflowId] : null;
   const currentScope = state.scope.length
     ? componentById[state.scope.at(-1)!]
@@ -67,16 +113,19 @@ export function Explorer() {
   const closePicker = useCallback(() => setWorkflowPicker(false), []);
   const explore = useCallback(
     (id: string) => {
+      setAtlasFile(null);
       dispatch({ type: "explore", id });
       setMobileInspector(false);
     },
     [dispatch],
   );
   const reset = useCallback(() => {
-    dispatch({ type: "reset" });
+    setAtlasFile(null);
+    if (state.mode === "atlas") dispatch({ type: "mode", mode: "atlas" });
+    else dispatch({ type: "reset" });
     setMobileInspector(false);
     setTourFinished(false);
-  }, [dispatch]);
+  }, [dispatch, state.mode]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -102,6 +151,7 @@ export function Explorer() {
           dispatch({ type: "navigate", navigation: "Explore" });
         }
         if (event.key === "Escape") {
+          setAtlasFile(null);
           setMobileInspector(false);
           setMobileNav(false);
           dispatch({ type: "select", id: null });
@@ -119,6 +169,16 @@ export function Explorer() {
   }, [tourFinished]);
 
   function select(id: string | null) {
+    if (state.mode === "atlas" && id?.startsWith("file:")) {
+      const file = project.files.find((file) => `file:${file.path}` === id);
+      if (file) {
+        setAtlasFile(file);
+        dispatch({ type: "select", id: null });
+        setMobileInspector(true);
+      }
+      return;
+    }
+    setAtlasFile(null);
     if (workflow && id) {
       const index = workflow.steps.findIndex((s) => s.componentId === id);
       if (index >= 0) {
@@ -135,6 +195,10 @@ export function Explorer() {
     if (id) setMobileInspector(true);
   }
   function sidebarSelect(id: string) {
+    if (state.mode === "atlas") {
+      select(id);
+      return;
+    }
     const component = componentById[id];
     dispatch({
       type: "search",
@@ -158,6 +222,7 @@ export function Explorer() {
     setTourFinished(false);
   }
   function onSearchResult(result: SearchResult) {
+    setAtlasFile(null);
     dispatch({ type: "search", result });
     setSearchOpen(false);
     setMobileInspector(true);
@@ -169,14 +234,44 @@ export function Explorer() {
     setMobileInspector(false);
   }
 
+  function showImpact(id: string) {
+    dispatch({ type: "mode", mode: "atlas" });
+    setAtlasIntent("impact");
+    if (id.startsWith("file:")) {
+      setAtlasFile(
+        project.files.find((file) => `file:${file.path}` === id) ?? null,
+      );
+    } else {
+      setAtlasFile(null);
+      dispatch({ type: "select", id });
+    }
+    setSource(null);
+    setMobileInspector(true);
+  }
+
+  function changeAtlasIntent(intent: AtlasIntent) {
+    setAtlasIntent(intent);
+    if (intent === "explore" && atlasFile) {
+      const moduleId = atlasModel.nodes.find(
+        (node) => node.id === `file:${atlasFile.path}`,
+      )?.moduleId;
+      setAtlasFile(null);
+      dispatch({ type: "select", id: moduleId ?? null });
+    }
+  }
+
   const title =
     currentScope?.name ??
-    (state.mode === "domain"
-      ? "Domain"
-      : state.mode === "architecture"
-        ? "Architecture"
-        : (workflow?.name ?? "Overview"));
-  const inspectorOpen = Boolean(state.selectedId || workflow);
+    (state.mode === "atlas"
+      ? "Atlas"
+      : state.mode === "domain"
+        ? "Domain"
+        : state.mode === "architecture"
+          ? "Architecture"
+          : (workflow?.name ?? "Overview"));
+  const inspectorOpen = Boolean(
+    state.selectedId || workflow || (state.mode === "atlas" && atlasFile),
+  );
 
   return (
     <MotionConfig reducedMotion="user">
@@ -310,40 +405,80 @@ export function Explorer() {
                 )}
               </AnimatePresence>
               <div className="graph-region">
-                <ReactFlowProvider>
-                  <GraphCanvas
-                    mode={state.mode}
-                    scope={state.scope}
-                    selectedId={state.selectedId}
+                {state.mode === "atlas" ? (
+                  <AtlasView
+                    model={atlasModel}
+                    intent={atlasIntent}
+                    onIntentChange={changeAtlasIntent}
+                    selectedId={atlasTarget}
                     focusedIds={state.focusedIds}
-                    workflowId={state.workflowId}
-                    step={state.step}
-                    resetKey={state.resetKey}
                     onSelect={select}
-                    onExplore={explore}
+                    onSource={setSource}
+                    onMap={() => dispatch({ type: "mode", mode: "map" })}
                     onReset={reset}
                   />
-                </ReactFlowProvider>
+                ) : (
+                  <ReactFlowProvider>
+                    <GraphCanvas
+                      mode={state.mode}
+                      scope={state.scope}
+                      selectedId={state.selectedId}
+                      focusedIds={state.focusedIds}
+                      workflowId={state.workflowId}
+                      step={state.step}
+                      resetKey={state.resetKey}
+                      onSelect={select}
+                      onExplore={explore}
+                      onReset={reset}
+                    />
+                  </ReactFlowProvider>
+                )}
               </div>
               <WorkflowShelf onStart={startWorkflow} />
             </main>
-            {inspectorOpen && (
-              <Inspector
-                selectedId={state.selectedId}
-                scope={state.scope}
-                mode={state.mode}
-                level={state.level}
-                workflow={workflow}
-                step={state.step}
+            {impact ? (
+              <ImpactPanel
+                key={impact.targetId}
+                model={atlasModel}
+                impact={impact}
                 mobileOpen={mobileInspector}
-                onLevel={(level) => dispatch({ type: "level", level })}
-                onSelect={select}
-                onExplore={explore}
+                onClose={() => {
+                  if (!window.matchMedia("(max-width: 900px)").matches)
+                    select(null);
+                  setMobileInspector(false);
+                }}
                 onSource={setSource}
-                onStep={(step) => dispatch({ type: "step", step })}
-                onEndWorkflow={endWorkflow}
-                onCloseMobile={() => setMobileInspector(false)}
+                onInspect={(id) => {
+                  setAtlasIntent("explore");
+                  select(id);
+                }}
+                onExplore={explore}
               />
+            ) : (
+              inspectorOpen && (
+                <Inspector
+                  selectedId={state.selectedId}
+                  scope={state.scope}
+                  mode={state.mode}
+                  level={state.level}
+                  workflow={workflow}
+                  step={state.step}
+                  mobileOpen={mobileInspector}
+                  onLevel={(level) => dispatch({ type: "level", level })}
+                  onSelect={select}
+                  onExplore={explore}
+                  onSource={setSource}
+                  onStep={(step) => dispatch({ type: "step", step })}
+                  onEndWorkflow={endWorkflow}
+                  onCloseMobile={() => setMobileInspector(false)}
+                  onShowImpact={
+                    state.selectedId &&
+                    Object.hasOwn(componentById, state.selectedId)
+                      ? () => showImpact(state.selectedId!)
+                      : undefined
+                  }
+                />
+              )
             )}
           </div>
         </div>
@@ -358,8 +493,12 @@ export function Explorer() {
               {workflow
                 ? `Step ${state.step + 1} of ${workflow.steps.length}`
                 : state.selectedId
-                  ? "Component details"
-                  : "Details"}
+                  ? impact
+                    ? "Change impact"
+                    : "Component details"
+                  : impact
+                    ? "Change impact"
+                    : "Details"}
             </span>
           </button>
         )}
@@ -390,7 +529,13 @@ export function Explorer() {
       {searchOpen && (
         <SearchDialog onClose={closeSearch} onResult={onSearchResult} />
       )}
-      {source && <SourceDialog file={source} onClose={closeSource} />}
+      {source && (
+        <SourceDialog
+          file={source}
+          onClose={closeSource}
+          onShowImpact={() => showImpact(`file:${source.path}`)}
+        />
+      )}
       {helpOpen && <HelpDialog onClose={closeHelp} />}
       {workflowPicker && (
         <WorkflowPicker onClose={closePicker} onStart={startWorkflow} />

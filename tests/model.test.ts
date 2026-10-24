@@ -164,6 +164,6 @@ test("switching diagram modes clears tour state, and reset preserves explanation
   assert.equal(domain.navigation, "Diagrams");
   const reset = explorerReducer(domain, { type: "reset" });
   assert.equal(reset.level, "developer");
-  assert.equal(reset.mode, "map");
+  assert.equal(reset.mode, "atlas");
   assert.equal(reset.resetKey, 1);
 });

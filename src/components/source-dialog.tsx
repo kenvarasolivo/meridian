@@ -9,9 +9,11 @@ import { Modal } from "./modal";
 export function SourceDialog({
   file,
   onClose,
+  onShowImpact,
 }: {
   file: SourceFile;
   onClose: () => void;
+  onShowImpact?: () => void;
 }) {
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState(false);
@@ -49,10 +51,18 @@ export function SourceDialog({
             {file.code.split("\n").length} lines
           </span>
         </span>
-        <button className="text-button" onClick={() => void copy()}>
-          {copied ? <Check size={14} /> : <Copy size={14} />}
-          {copied ? "Copied" : "Copy code"}
-        </button>
+        <div className="source-code-actions">
+          {onShowImpact && (
+            <button className="text-button" onClick={onShowImpact}>
+              <GitBranch size={14} />
+              Show impact
+            </button>
+          )}
+          <button className="text-button" onClick={() => void copy()}>
+            {copied ? <Check size={14} /> : <Copy size={14} />}
+            {copied ? "Copied" : "Copy code"}
+          </button>
+        </div>
       </div>
       <div className="source-code-scroll">
         <CodePreview file={file} />

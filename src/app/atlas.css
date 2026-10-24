@@ -1,0 +1,234 @@
+.atlas-canvas {
+  height: 100%;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  background: #1c1e1b;
+}
+.atlas-canvas canvas {
+  display: block;
+}
+.atlas-caption {
+  position: absolute;
+  left: 21px;
+  top: 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  pointer-events: none;
+  font-size: 11px;
+  color: var(--muted);
+}
+.atlas-caption > span:last-child {
+  display: flex;
+  gap: 7px;
+  color: var(--faint);
+}
+.atlas-hint {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.atlas-hint > button {
+  display: flex;
+  color: var(--faint);
+}
+.atlas-hint > button:hover {
+  color: var(--text);
+}
+.atlas-controls {
+  bottom: 17px;
+}
+.atlas-controls button {
+  min-width: 29px;
+}
+.atlas-show-all {
+  position: absolute;
+  bottom: 24px;
+  right: 23px;
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 11px;
+}
+.atlas-show-all:hover {
+  color: var(--accent);
+}
+.atlas-hover-info {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--text);
+  font-size: 11px;
+  pointer-events: none;
+  max-width: 50%;
+  background: #1c1e1b;
+  padding: 0 0 4px 10px;
+}
+.atlas-hover-info > i {
+  width: 5px;
+  height: 5px;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+.atlas-hover-info > span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.atlas-hover-info > small {
+  color: var(--faint);
+  font-size: 10px;
+  white-space: nowrap;
+}
+.atlas-tooltip {
+  display: block;
+  padding: 9px 12px;
+  color: var(--text);
+  font-family: var(--font-sans);
+  background: var(--raised);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.atlas-tooltip small {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+  margin-top: 4px;
+}
+.atlas-keyboard-modules {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  clip-path: inset(50%);
+  overflow: hidden;
+}
+.atlas-keyboard-modules:focus-within {
+  clip-path: none;
+  width: auto;
+  height: auto;
+  left: 20px;
+  top: 52px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.atlas-keyboard-modules > button {
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 12px;
+}
+.atlas-loading {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 14px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.atlas-loading > svg {
+  color: var(--accent);
+}
+.atlas-fallback {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 17px;
+  height: 100%;
+  overflow: auto;
+  padding: 30px;
+}
+.atlas-fallback > svg {
+  color: var(--accent);
+}
+.atlas-fallback > h2 {
+  font-size: 18px;
+  font-weight: 400;
+}
+.atlas-fallback > p {
+  font-size: 12px;
+  color: var(--muted);
+}
+.atlas-fallback > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  max-width: 500px;
+  margin: 9px 0;
+}
+.atlas-fallback > div > button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 9px 12px;
+  font-size: 12px;
+}
+.atlas-fallback > div > button:hover {
+  background: var(--raised);
+}
+.atlas-fallback i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+@media (max-width: 600px) {
+  .map-toolbar .view-tabs {
+    gap: 19px;
+  }
+  .map-toolbar .view-tabs > button {
+    gap: 5px;
+  }
+  .atlas-caption {
+    left: 15px;
+    right: 15px;
+    top: 16px;
+    justify-content: space-between;
+    font-size: 11px;
+  }
+  .atlas-hint {
+    bottom: 65px;
+    font-size: 11px;
+  }
+  .atlas-hover-info {
+    top: 42px;
+    right: 15px;
+    left: 15px;
+    max-width: 100%;
+    padding-left: 0;
+    font-size: 10px;
+  }
+  .atlas-show-all {
+    font-size: 11px;
+    bottom: 27px;
+    right: 14px;
+  }
+  .atlas-fallback {
+    padding: 25px 17px;
+  }
+  .atlas-fallback > h2 {
+    font-size: 15px;
+  }
+}

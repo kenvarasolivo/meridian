@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import "@xyflow/react/dist/style.css";
 import "./globals.css";
 import "./clean-workspace.css";
+import "./atlas.css";
+import "./impact.css";
 
 export const metadata: Metadata = {
   title: "Meridian — Complex code. Made clear.",

@@ -38,7 +38,7 @@ type Action =
 
 const initialState: ExplorerState = {
   scope: [],
-  mode: "map",
+  mode: "atlas",
   navigation: "Overview",
   selectedId: null,
   level: "beginner",
@@ -90,7 +90,10 @@ export function explorerReducer(
       return {
         ...state,
         mode: action.mode,
-        navigation: action.mode === "map" ? "Explore" : "Diagrams",
+        navigation:
+          action.mode === "map" || action.mode === "atlas"
+            ? "Explore"
+            : "Diagrams",
         scope: [],
         selectedId: null,
         workflowId: null,
@@ -190,8 +193,8 @@ export function explorerReducer(
             ];
       return {
         ...state,
-        scope: getComponentScope(id),
-        mode: "map",
+        scope: state.mode === "atlas" ? [] : getComponentScope(id),
+        mode: state.mode === "atlas" ? "atlas" : "map",
         navigation: "Explore",
         workflowId: null,
         selectedId: id,
