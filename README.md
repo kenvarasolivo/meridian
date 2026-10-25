@@ -23,12 +23,14 @@ npm run build
 
 ## Try it
 
+- Open **User flows** in the sidebar (or `/flows`) for customer journey diagrams. Select a step, then **See on the map** to open its matching step in the architecture walkthrough.
+
 - On the landing page, drag the hollow node globe to rotate it. Horizontal touch dragging works alongside normal page scrolling; keyboard arrows and visible rotate/zoom/fit buttons provide alternatives. Use **Find a node** to search names, file paths, or descriptions such as “cart quantities”, then select a result to face it and see its direct connections. Filter by modules, components, or files. The landing page and Atlas share one lightweight perspective-projected 3D renderer.
 - Under **Meet your codebase**, select a module to inspect its purpose and source, or choose **Checkout workflow** and use the arrows to follow all seven steps. **Explore the demo** opens the full workspace.
 - Select **API**, then **Explore deeper**. Select **Services** and explore again. The breadcrumbs and Back controls take you to any previous layer.
 - Choose **Place an order** below the map. Use Previous, Next, the progress markers, or journey steps to follow checkout. Open each source file and change between Beginner and Developer explanations.
 - Press **Ctrl/⌘ K** or **/**. Try “Where is authentication handled?”, “How does checkout work?”, or “What connects to the database?”. Search uses deterministic local matching and reports unsupported queries honestly.
-- Switch to **Architecture diagram** or **Domain diagram**. The domain model includes OrderItem to accurately represent products inside orders.
+- Use **Map** to explore application components and their connections, or **Domain diagram** for data entities. The domain model includes OrderItem to accurately represent products inside orders. Legacy architecture links open Map.
 - Drag nodes, pan the canvas, zoom with the controls or the wheel, fit the graph, or reset its layout. On a phone, an accessible component list replaces the graph and opens the same inspector.
 - Details appear when you select a component. Implementation snippets and the complete workflow step list expand on demand.
 - Open **Atlas** for a hollow 3D network of seven modules, their components, and source files. Drag to rotate, scroll to zoom, or use the arrow/zoom/reset controls. All relationship lines start visible on the landing page and in Atlas. Disable **All relationships** for a quieter overview with one primary link per smaller node; hover or select a node to highlight its direct relationships. Reset restores all relationships. Search faces the chosen node toward you. The **Files** toggle reduces detail while retaining focused files. Selecting a file explains its purpose and dependency direction, with explicit **Open source** and **Show dependencies** actions. Phones use a compact module selector. **Explore deeper** opens the focused map. [Open Atlas](http://localhost:3000/explore#atlas).

@@ -17,15 +17,6 @@ const overviewPositions: Record<string, { x: number; y: number }> = {
   jobs: { x: 660, y: 360 },
   notifications: { x: 330, y: 360 },
 };
-const architecturePositions: Record<string, { x: number; y: number }> = {
-  frontend: { x: 0, y: 220 },
-  api: { x: 300, y: 220 },
-  auth: { x: 300, y: 0 },
-  database: { x: 600, y: 0 },
-  payments: { x: 600, y: 220 },
-  jobs: { x: 600, y: 440 },
-  notifications: { x: 300, y: 440 },
-};
 const domainPositions: Record<string, { x: number; y: number }> = {
   "entity-user": { x: 0, y: 0 },
   "entity-order": { x: 310, y: 0 },
@@ -72,8 +63,7 @@ export function getGraphModel(mode: ViewMode, scope: string[]) {
   return {
     components: rootComponents,
     relationships,
-    positions:
-      mode === "architecture" ? architecturePositions : overviewPositions,
+    positions: overviewPositions,
   };
 }
 

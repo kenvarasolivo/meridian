@@ -9,6 +9,7 @@ const dom = new JSDOM("<!doctype html><html><body></body></html>", {
 });
 Object.defineProperties(globalThis, {
   window: { value: dom.window, configurable: true },
+  self: { value: dom.window, configurable: true },
   document: { value: dom.window.document, configurable: true },
   navigator: { value: dom.window.navigator, configurable: true },
   HTMLElement: { value: dom.window.HTMLElement, configurable: true },
@@ -56,6 +57,37 @@ const { HelpDialog } = await import("../src/components/help-dialog");
 const { workflows } = await import("../src/data/workflows");
 const { sources } = await import("../src/data/sources");
 const { Explorer } = await import("../src/components/explorer");
+const { UserFlows } = await import("../src/components/user-flows");
+const { userFlows } = await import("../src/data/user-flows");
+
+test("customer journeys map every step to an existing workflow and open the selected architecture step", () => {
+  for (const flow of userFlows) {
+    const workflow = workflows.find((workflow) => workflow.id === flow.id)!;
+    assert.ok(workflow);
+    for (const step of flow.steps) assert.ok(workflow.steps[step.mapStep]);
+  }
+  render(<UserFlows />);
+  const body = within(document.body);
+  fireEvent.click(body.getByRole("button", { name: /Receive an order receipt/ }));
+  const detail = within(body.getByRole("complementary", { name: "Selected journey step" }));
+  assert.equal(detail.getByRole("link", { name: "See on the map" }).getAttribute("href"), "/explore#workflow?id=checkout&step=6");
+  fireEvent.click(body.getByRole("button", { name: /Sign in.*journey steps/ }));
+  assert.ok(body.getByText("Do the credentials match?"));
+  assert.ok(body.getByText("Show a sign-in error"));
+  assert.equal(detail.getByRole("link", { name: "See on the map" }).getAttribute("href"), "/explore#workflow?id=login&step=0");
+});
+
+test("a journey deep link selects its architecture step and highlights the workflow", () => {
+  window.history.replaceState(null, "", "/explore#workflow?id=checkout&step=6");
+  const view = render(<Explorer />);
+  const body = within(document.body);
+  assert.equal(body.getByRole("tab", { name: "Map" }).getAttribute("aria-selected"), "true");
+  const panel = within(body.getByRole("complementary", { name: "Component inspector" }));
+  assert.ok(panel.getByText("Step 7 of 7"));
+  assert.ok(panel.getByRole("heading", { name: "A receipt reaches the customer" }));
+  view.unmount();
+  window.history.replaceState(null, "", "/");
+});
 const { AtlasFallback, AtlasView } = await import(
   "../src/components/atlas-view"
 );
@@ -218,7 +250,7 @@ test("source inspection can trace impact, explain a path, and return to explorat
 test("the workspace reveals details on selection and hides them when exploring deeper", () => {
   render(<Explorer />);
   const body = within(document.body);
-  assert.equal(body.getAllByRole("tab")[0].textContent, "Atlas");
+  assert.deepEqual(body.getAllByRole("tab").map((tab) => tab.textContent), ["Atlas", "Map", "Domain"]);
   assert.equal(
     body.getByRole("tab", { name: "Atlas" }).getAttribute("aria-selected"),
     "true",
@@ -245,7 +277,7 @@ test("the workspace reveals details on selection and hides them when exploring d
   );
   assert.ok(body.getByRole("button", { name: "Back one level" }));
   fireEvent.click(body.getByRole("button", { name: "Back one level" }));
-  assert.ok(body.getByRole("heading", { name: "Overview" }));
+  assert.ok(body.getByRole("heading", { name: "Map" }));
 });
 
 test("search suggestions, matching, keyboard opening, unsupported queries, and Escape work", () => {

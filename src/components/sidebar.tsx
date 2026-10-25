@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   ArrowUpRight,
   Check,
@@ -111,6 +112,14 @@ export function Sidebar(props: Props) {
         <nav className="primary-nav" aria-label="Main navigation">
           {(Object.keys(navigationIcons) as NavigationItem[]).map((item) => {
             const Icon = navigationIcons[item];
+            if (item === "Workflows") return (
+              <Link key={item} href="/flows" title={props.collapsed ? "User flows" : undefined}
+                className={`nav-item ${props.navigation === item ? "active" : ""}`}
+                aria-current={props.navigation === item ? "page" : undefined}
+                onClick={props.onCloseMobile}>
+                <Icon size={18} strokeWidth={1.7} /><span>User flows</span>
+              </Link>
+            );
             return (
               <button
                 title={props.collapsed ? item : undefined}

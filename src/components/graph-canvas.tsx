@@ -110,7 +110,6 @@ export function GraphCanvas(props: Props) {
           component,
           dimmed: false,
           active: false,
-          compact: mode === "architecture",
           onExplore,
         },
       })),

@@ -12,7 +12,6 @@ export type ComponentNode = Node<
     component: CodeComponent;
     dimmed: boolean;
     active: boolean;
-    compact: boolean;
     workflowStep?: number;
     onExplore: (id: string) => void;
   },
@@ -27,7 +26,6 @@ export const ArchitectureNode = memo(function ArchitectureNode({
     component: c,
     dimmed,
     active,
-    compact,
     workflowStep,
     onExplore,
   } = data;
@@ -37,7 +35,7 @@ export const ArchitectureNode = memo(function ArchitectureNode({
   return (
     <div
       title={`${c.name} · ${c.type} · ${c.technology}`}
-      className={`architecture-node ${selected ? "is-selected" : ""} ${dimmed ? "is-dimmed" : ""} ${active ? "is-path" : ""} ${compact ? "is-compact" : ""} ${entity.fields ? "entity-node" : ""}`}
+      className={`architecture-node ${selected ? "is-selected" : ""} ${dimmed ? "is-dimmed" : ""} ${active ? "is-path" : ""} ${entity.fields ? "entity-node" : ""}`}
       style={{ "--node-color": meta.color } as React.CSSProperties}
     >
       {[Position.Left, Position.Right, Position.Top, Position.Bottom].map(
@@ -54,7 +52,7 @@ export const ArchitectureNode = memo(function ArchitectureNode({
       {workflowStep !== undefined && (
         <span className="node-step">{workflowStep + 1}</span>
       )}
-      {!entity.fields && !compact && c.children?.length ? (
+      {!entity.fields && c.children?.length ? (
         <button
           className="nodrag node-drill"
           aria-label={`Explore inside ${c.name}`}
@@ -71,7 +69,7 @@ export const ArchitectureNode = memo(function ArchitectureNode({
         <Icon size={21} strokeWidth={1.65} />
         <span>{c.name}</span>
       </div>
-      {!compact && <p className="node-description">{c.description}</p>}
+      <p className="node-description">{c.description}</p>
       {entity.fields ? (
         <div className="entity-fields">
           {entity.fields.map((field) => (

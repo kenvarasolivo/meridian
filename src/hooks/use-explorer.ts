@@ -111,7 +111,7 @@ export function explorerReducer(
         return {
           ...state,
           navigation: "Diagrams",
-          mode: "architecture",
+          mode: "domain",
           selectedId: null,
           scope: [],
           workflowId: null,

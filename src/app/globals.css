@@ -1019,13 +1019,8 @@ kbd {
   border-radius: 50%;
   font-size: 11px;
 }
-.is-compact .node-topline {
-  padding-top: 11px;
-}
-.is-compact .node-title {
-  padding-bottom: 17px;
-  padding-top: 10px;
-}
+.flow-return-link { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 13px; margin-right: 16px; text-decoration: none; }
+.flow-return-link:hover { color: var(--text); }
 .entity-node {
   width: 235px;
 }

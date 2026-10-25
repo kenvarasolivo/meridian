@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { ReactFlowProvider } from "@xyflow/react";
 import { AnimatePresence, motion, MotionConfig } from "framer-motion";
 import {
@@ -12,7 +13,6 @@ import {
   Orbit,
   PanelRightOpen,
   Search,
-  Workflow,
   X,
 } from "lucide-react";
 import { componentById, project } from "@/data/application";
@@ -45,12 +45,6 @@ const modes: {
 }[] = [
   { id: "atlas", label: "3D codebase atlas", short: "Atlas", icon: Orbit },
   { id: "map", label: "Interactive map", short: "Map", icon: Network },
-  {
-    id: "architecture",
-    label: "Architecture diagram",
-    short: "Architecture",
-    icon: Workflow,
-  },
   { id: "domain", label: "Domain diagram", short: "Domain", icon: Box },
 ];
 
@@ -87,13 +81,21 @@ export function Explorer() {
   useEffect(() => {
     const openAtlasLink = () => {
       const [view, parameters] = window.location.hash.slice(1).split("?");
-      if (view === "map" || view === "architecture" || view === "domain") {
+      if (view === "architecture") {
+        window.history.replaceState(null, "", `#map${parameters ? `?${parameters}` : ""}`);
+        dispatch({ type: "mode", mode: "map" });
+      }
+      if (view === "map" || view === "domain") {
         dispatch({ type: "mode", mode: view });
       }
       if (view === "workflow") {
-        const id = new URLSearchParams(parameters).get("id");
+        const params = new URLSearchParams(parameters);
+        const id = params.get("id");
         if (id && Object.hasOwn(workflowById, id)) {
           dispatch({ type: "workflow", id });
+          const step = Number(params.get("step") ?? 0);
+          if (Number.isInteger(step) && step >= 0) dispatch({ type: "step", step });
+          setMobileInspector(true);
         }
       }
       if (view === "atlas") {
@@ -276,9 +278,7 @@ export function Explorer() {
       ? "Atlas"
       : state.mode === "domain"
         ? "Domain"
-        : state.mode === "architecture"
-          ? "Architecture"
-          : (workflow?.name ?? "Overview"));
+        : (workflow?.name ?? "Map"));
   const inspectorOpen = Boolean(
     state.selectedId || workflow || (state.mode === "atlas" && atlasFile),
   );
@@ -369,6 +369,7 @@ export function Explorer() {
           >
             <main className="main-content">
               <div className="map-toolbar">
+                {workflow && <Link href="/flows" className="flow-return-link"><ArrowLeft size={14} />User flows</Link>}
                 <div
                   className="view-tabs"
                   role="tablist"

@@ -1,5 +1,5 @@
 export type ExplanationLevel = "beginner" | "developer";
-export type ViewMode = "map" | "atlas" | "architecture" | "domain";
+export type ViewMode = "map" | "atlas" | "domain";
 export type NavigationItem = "Overview" | "Explore" | "Workflows" | "Diagrams";
 export type ComponentKind =
   | "frontend"
