@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowDown,
   ArrowRight,
@@ -11,6 +12,9 @@ import {
   ChevronRight,
   Code2,
   GitBranch,
+  Layers3,
+  Compass,
+  ShieldCheck,
   Menu,
   Network,
   Play,
@@ -300,7 +304,7 @@ function ProductPreview() {
             className="preview-detail-link"
             href={
               tab === "workflow"
-                ? "/explore#workflow?id=checkout"
+                ? `/explore#workflow?id=checkout&step=${step}`
                 : `/explore#atlas?module=${current.id}`
             }
           >
@@ -332,24 +336,6 @@ export function Landing() {
   }, [router]);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("has-entered");
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.08 },
-    );
-    document
-      .querySelectorAll(".landing .reveal")
-      .forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
     const close = (event: KeyboardEvent) => {
       if (event.key === "Escape") setMenuOpen(false);
     };
@@ -358,14 +344,14 @@ export function Landing() {
   }, []);
 
   return (
-    <main className="landing" id="main">
-      <a className="landing-skip" href="#main">
+    <main className="landing premium-landing" id="main">
+      <a className="landing-skip" href="#hero-title">
         Skip to content
       </a>
       <div className="landing-dark">
         <header className="landing-header">
           <Link className="landing-brand" href="/" aria-label="Meridian home">
-            <MeridianMark size={33} />
+            <MeridianMark size={29} />
             <span>
               meridian<span className="wordmark-period">.</span>
             </span>
@@ -376,19 +362,17 @@ export function Landing() {
             aria-label="Main navigation"
           >
             <a href="#perspective" onClick={() => setMenuOpen(false)}>
-              The idea
+              Why Meridian
             </a>
             <a href="#inside" onClick={() => setMenuOpen(false)}>
-              Inside Meridian
+              The workspace
             </a>
             <a href="#questions" onClick={() => setMenuOpen(false)}>
-              Questions
+              FAQs
             </a>
           </nav>
           <Link className="landing-header-cta" href="/explore">
-            <span className="header-cta-full">Open the demo</span>
-            <span className="header-cta-short">Demo</span>{" "}
-            <ArrowUpRight size={16} />
+            Open workspace <ArrowUpRight size={15} />
           </Link>
           <button
             className="landing-menu"
@@ -401,74 +385,139 @@ export function Landing() {
           </button>
         </header>
 
-        <div>
-          <section className="landing-hero" aria-labelledby="hero-title">
-            <div className="hero-topline">
-              <span>
-                <i /> A new perspective on your codebase
-              </span>
-              <span>
-                Built for the bigger picture <ArrowUpRight size={13} />
+        <section className="landing-hero" aria-labelledby="hero-title">
+          <div className="hero-intro">
+            <div className="hero-copy-stack">
+              <div className="hero-announcement">
+                <span className="status-orb" /> A new perspective on your
+                codebase <ArrowRight size={13} />
+              </div>
+              <h1 id="hero-title">
+                Complex code.
+                <br />
+                Made clear.
+              </h1>
+              <p>
+                Your codebase has a bigger picture. See the architecture, follow
+                the flow,
+                <br className="desktop-break" /> and understand how it all fits
+                together.
+              </p>
+              <div className="hero-actions">
+                <Link className="landing-button button-primary" href="/explore">
+                  Explore the demo <ArrowRight size={17} />
+                </Link>
+                <a className="landing-button button-glass" href="#inside">
+                  <Play size={13} /> See how it works
+                </a>
+              </div>
+              <div className="hero-reassurance">
+                <span>
+                  <Check size={13} /> No setup
+                </span>
+                <span>
+                  <Check size={13} /> No account needed
+                </span>
+                <span>Just a little curiosity.</span>
+              </div>
+            </div>
+            <div className="hero-artwork" aria-hidden="true">
+              <Image
+                src="/images/meridian-glass-orbit-lossless.webp"
+                alt=""
+                fill
+                preload
+                unoptimized
+              />
+            </div>
+          </div>
+
+          <div className="atlas-window">
+            <div className="atlas-window-bar">
+              <div className="window-project">
+                <MeridianMark size={19} />
+                <span>Acme Commerce</span>
+                <ChevronRight size={13} />
+                <span className="window-project-muted">Workspace</span>
+              </div>
+              <nav aria-label="Workspace previews" className="window-views">
+                <a href="#live-atlas" className="is-active">
+                  <Network size={14} /> Atlas
+                </a>
+                <Link href="/explore#map">
+                  <Layers3 size={14} /> Map
+                </Link>
+                <Link href="/flows">
+                  <Route size={14} /> User flows
+                </Link>
+              </nav>
+              <span className="window-live">
+                <i /> Interactive demo
               </span>
             </div>
-            <div className="hero-content">
-              <div className="hero-copy">
-                <h1 id="hero-title">
-                  <span>Complex code.</span>
-                  <span>Made clear.</span>
-                </h1>
+            <div className="atlas-window-body" id="live-atlas">
+              <aside className="atlas-sidebar">
+                <span className="sidebar-label">Your codebase, in context</span>
+                <h2>Every connection.</h2>
                 <p>
-                  Find your way through a codebase. See how it connects, follow
-                  the flow, and get to the source.
+                  Explore the relationships between modules, components, and
+                  source files.
                 </p>
-                <div className="hero-actions">
-                  <Link className="landing-button button-light" href="/explore">
-                    Explore the demo <ArrowUpRight size={18} />
+                <div className="atlas-sidebar-facts">
+                  <span>
+                    <Network size={15} /> 7 connected modules
+                  </span>
+                  <span>
+                    <Code2 size={15} /> Traceable source files
+                  </span>
+                  <span>
+                    <Compass size={15} /> One bigger picture
+                  </span>
+                </div>
+                <div className="atlas-sidebar-bottom">
+                  <span className="sidebar-gesture">
+                    <span className="gesture-orbit" /> Made to be explored.
+                  </span>
+                  <p>
+                    Drag to orbit. Select a node.
+                    <br />
+                    See where it takes you.
+                  </p>
+                  <Link href="/explore#atlas">
+                    Enter the Atlas <ArrowUpRight size={15} />
                   </Link>
-                  <a className="hero-text-link" href="#inside">
-                    <span className="play-icon">
-                      <Play size={10} fill="currentColor" />
-                    </span>{" "}
-                    Take a closer look
-                  </a>
                 </div>
-                <div className="hero-reassurance">
-                  <span>
-                    <Check size={12} /> No setup
-                  </span>
-                  <span>
-                    <Check size={12} /> No account
-                  </span>
-                  <span>
-                    <Check size={12} /> Just explore
-                  </span>
-                </div>
-              </div>
-              <div className="hero-visual hero-network">
+              </aside>
+              <div className="hero-atlas">
                 <CodeAtlas selected={selected} onSelect={setSelected} />
               </div>
             </div>
-            <div className="hero-footer">
-              <a className="hero-scroll" href="#perspective">
-                <span>
-                  <ArrowDown size={17} />
-                </span>{" "}
-                A little context changes everything.
-              </a>
-            </div>
-          </section>
-          <div className="hero-proofline">
-            <span>FROM BIG PICTURE TO LINE OF CODE</span>
-            <div>
-              <span>Architecture</span>
-              <i />
-              <span>Workflows</span>
-              <i />
-              <span>Dependencies</span>
-              <i />
-              <span>Source</span>
-            </div>
-            <span className="proofline-note">One connected workspace</span>
+          </div>
+          <div className="atlas-under-caption">
+            <span>
+              <span className="status-orb" /> A living map. An illustrative
+              codebase.
+            </span>
+            <a href="#perspective">
+              Discover the bigger picture <ArrowDown size={14} />
+            </a>
+          </div>
+        </section>
+        <div className="hero-proofline">
+          <p>One codebase. Every perspective.</p>
+          <div>
+            <span>
+              <Network size={17} /> Architecture
+            </span>
+            <span>
+              <Route size={17} /> Workflows
+            </span>
+            <span>
+              <GitBranch size={17} /> Dependencies
+            </span>
+            <span>
+              <Code2 size={17} /> Source code
+            </span>
           </div>
         </div>
       </div>
@@ -478,43 +527,44 @@ export function Landing() {
         className="perspective-section"
         aria-labelledby="perspective-title"
       >
-        <div className="section-topline">
-          <span>Less searching. More understanding.</span>
-          <span>THE MERIDIAN PERSPECTIVE</span>
-        </div>
         <div className="perspective-grid">
-          <h2 className="reveal" id="perspective-title">
-            The files are only
-            <br />
-            half the story.
-          </h2>
-          <div className="perspective-copy reveal">
+          <div>
+            <span className="section-label-text">
+              Less searching. More understanding.
+            </span>
+            <h2 id="perspective-title">Beyond the file tree.</h2>
+          </div>
+          <div className="perspective-copy">
             <p>
-              A codebase is a connected system. But a file tree only shows you
-              where things live.
+              A file tree tells you where things live.
+              <br />
+              Meridian shows you how they work together.
             </p>
             <p>
-              Meridian shows you how they work together. Start with the whole
-              architecture, follow a real user journey, then open the code
+              Turn an unfamiliar codebase into a system you can navigate. Start
+              with the architecture, follow a user journey, then open the code
               behind it.
             </p>
             <a className="inline-link" href="#inside">
-              See the connections <ArrowDown size={16} />
+              Get the whole picture <ArrowDown size={16} />
             </a>
           </div>
         </div>
-        <div className="perspective-bottom reveal">
+        <div
+          className="perspective-path"
+          aria-label="Explore from system to source"
+        >
           <span>
-            Built for the moment you ask, “How does this actually work?”
+            <Network size={22} /> The system
           </span>
-          <div className="perspective-legend">
-            <span>
-              <i /> The whole system
-            </span>
-            <span>
-              <i /> The detail that matters
-            </span>
-          </div>
+          <i />
+          <span>
+            <Route size={22} /> The journey
+          </span>
+          <i />
+          <span>
+            <Code2 size={22} /> The source
+          </span>
         </div>
       </section>
 
@@ -523,22 +573,20 @@ export function Landing() {
         className="inside-section"
         aria-labelledby="inside-title"
       >
-        <div className="inside-heading reveal">
+        <div className="inside-heading">
           <div>
-            <span className="section-kicker">A LITTLE LESS ABSTRACT</span>
+            <span className="section-label-text">Clarity, at every level.</span>
             <h2 id="inside-title">Meet your codebase.</h2>
           </div>
           <p>
-            A storefront. Seven connected modules. <br />
-            One place to start making sense of it.
+            A storefront. Seven connected modules.
+            <br />A hands-on way to see how it works.
           </p>
         </div>
-        <div className="reveal">
-          <ProductPreview />
-        </div>
+        <ProductPreview />
         <div className="preview-caption">
           <span>
-            <span className="caption-dot" /> Real interactions. Illustrative
+            <span className="status-orb" /> Real interactions. Illustrative
             codebase.
           </span>
           <Link href="/explore#map">
@@ -548,86 +596,103 @@ export function Landing() {
       </section>
 
       <section className="context-section" aria-labelledby="context-title">
-        <div className="context-title reveal">
-          <span className="section-kicker">FOLLOW YOUR CURIOSITY</span>
+        <div className="context-title">
+          <span className="section-label-text">Follow your curiosity.</span>
           <h2 id="context-title">
-            Every layer. <br />
+            Every layer.
+            <br />
             More context.
           </h2>
           <p>
-            Zoom out to get oriented. <br />
-            Go deeper when you’re ready.
+            Zoom out to get oriented.
+            <br />
+            Go deeper when you are ready.
           </p>
           <Link className="inline-link" href="/explore">
             Find your starting point <ArrowUpRight size={16} />
           </Link>
+          <div className="context-orbit" aria-hidden="true">
+            <div />
+            <div />
+            <MeridianMark size={45} />
+            <span />
+            <span />
+            <span />
+          </div>
         </div>
         <div className="context-stories">
-          <article className="context-story reveal">
+          <article className="context-story">
             <div className="story-label">
               <Network size={18} />
-              <span>The big picture</span>
+              <span>Architecture</span>
             </div>
             <h3>See the system.</h3>
             <p>
-              Explore modules, services, and the dependencies between them. Turn
-              an unfamiliar architecture into a place you can navigate.
+              Explore modules, services, and their dependencies. Turn an
+              unfamiliar architecture into a place you can navigate.
             </p>
             <Link href="/explore#map" aria-label="Explore the architecture">
-              <ArrowUpRight size={22} />
+              <ArrowUpRight size={21} />
             </Link>
             <div className="story-mini-map" aria-hidden="true">
               <span>Frontend</span>
-              <i />
+              <ArrowRight size={14} />
               <span>API</span>
-              <i />
+              <ArrowRight size={14} />
               <span>Database</span>
             </div>
           </article>
-          <article className="context-story reveal">
+          <article className="context-story">
             <div className="story-label">
               <Route size={18} />
-              <span>The journey through it</span>
+              <span>Workflows</span>
             </div>
             <h3>Follow what happens.</h3>
             <p>
-              What happens after someone clicks Checkout? Walk through the
-              request, payment, background job, and receipt, one step at a time.
+              What happens after someone clicks Checkout? Follow the request,
+              payment, background job, and receipt, step by step.
             </p>
             <Link
               href="/explore#workflow?id=checkout"
               aria-label="Follow the checkout workflow"
             >
-              <ArrowUpRight size={22} />
+              <ArrowUpRight size={21} />
             </Link>
             <div className="story-flow" aria-hidden="true">
-              <span>Request</span>
-              <ArrowRight size={15} />
-              <span>Payment</span>
-              <ArrowRight size={15} />
-              <span>Receipt</span>
+              <span>
+                <i /> Request
+              </span>
+              <ArrowRight size={14} />
+              <span>
+                <i /> Payment
+              </span>
+              <ArrowRight size={14} />
+              <span>
+                <i /> Receipt
+              </span>
             </div>
           </article>
-          <article className="context-story reveal">
+          <article className="context-story">
             <div className="story-label">
               <Code2 size={18} />
-              <span>The details behind it</span>
+              <span>Source & dependencies</span>
             </div>
-            <h3>Go straight to the source.</h3>
+            <h3>Get to the source.</h3>
             <p>
               Open the files behind each component. Trace potential dependents
-              before a change, with an explicit path back to the code.
+              before a change, with a clear path back to the code.
             </p>
             <Link
               href="/explore#atlas?mode=dependencies&file=lib/auth.ts"
               aria-label="Inspect authentication dependencies"
             >
-              <ArrowUpRight size={22} />
+              <ArrowUpRight size={21} />
             </Link>
-            <div className="story-source" aria-hidden="true">
+            <div className="story-source">
+              <Code2 size={14} />
               <span>lib/auth.ts</span>
-              <span>→ connected files</span>
-              <span className="source-cursor" />
+              <ArrowRight size={14} />
+              <span>Connected files</span>
             </div>
           </article>
         </div>
@@ -638,15 +703,13 @@ export function Landing() {
         className="questions-section"
         aria-labelledby="questions-title"
       >
-        <div className="questions-heading reveal">
-          <span className="section-kicker">BEFORE YOU EXPLORE</span>
-          <h2 id="questions-title">
-            A few things <br />
-            to know.
-          </h2>
+        <div className="questions-heading">
+          <span className="section-label-text">Before you dive in.</span>
+          <h2 id="questions-title">A little clarity.</h2>
           <p>A working demo, with clear boundaries.</p>
+          <ShieldCheck size={26} />
         </div>
-        <div className="questions-list reveal">
+        <div className="questions-list">
           {faqs.map((faq) => (
             <details key={faq.question}>
               <summary>
@@ -660,21 +723,43 @@ export function Landing() {
       </section>
 
       <footer className="landing-footer">
-        <div className="footer-cta reveal">
-          <div>
-            <span>YOUR NEXT “AHA” STARTS HERE</span>
-            <h2>Get your bearings.</h2>
-          </div>
-          <Link className="landing-button button-light" href="/explore">
-            Explore the demo <ArrowUpRight size={18} />
-          </Link>
+        <div className="footer-artwork" aria-hidden="true">
+          <Image
+            src="/images/meridian-obsidian-horizon-lossless.webp"
+            alt=""
+            fill
+            unoptimized
+          />
         </div>
-        <div className="footer-wordmark" aria-hidden="true">
-          meridian<span>.</span>
+        <div className="footer-cta">
+          <div className="footer-symbol">
+            <MeridianMark size={33} />
+          </div>
+          <h2>
+            Your next aha
+            <br />
+            starts here.
+          </h2>
+          <p>
+            Find your bearings. Follow a connection.
+            <br />
+            Make the unfamiliar feel familiar.
+          </p>
+          <Link className="landing-button button-primary" href="/explore">
+            Explore the demo <ArrowRight size={17} />
+          </Link>
+          <span className="footer-note">
+            No setup. No account. Just explore.
+          </span>
         </div>
         <div className="footer-bottom">
+          <Link className="landing-brand" href="/" aria-label="Meridian home">
+            <MeridianMark size={23} />
+            <span>
+              meridian<span className="wordmark-period">.</span>
+            </span>
+          </Link>
           <span>Complex code. Made clear.</span>
-          <span>A local demo. No account required.</span>
           <a href="#main">
             Back to the top <ArrowUpRight size={14} />
           </a>
