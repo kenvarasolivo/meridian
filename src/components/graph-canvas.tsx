@@ -206,7 +206,9 @@ export function GraphCanvas(props: Props) {
           labelBgBorderRadius: 4,
           markerEnd: {
             type: MarkerType.ArrowClosed,
-            color: highlighted ? "#75d9ad" : "#636c63",
+            color: highlighted
+              ? "var(--graph-edge-active, #75d9ad)"
+              : "var(--graph-edge, #636c63)",
             width: 15,
             height: 15,
           },
@@ -286,7 +288,7 @@ export function GraphCanvas(props: Props) {
           variant={BackgroundVariant.Dots}
           gap={23}
           size={1}
-          color="#3c413b"
+          color="var(--graph-grid, #3c413b)"
         />
       </ReactFlow>
       <div className="mobile-component-list">

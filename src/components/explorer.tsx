@@ -395,6 +395,7 @@ export function Explorer() {
                     );
                   })}
                 </div>
+                <span className="workspace-context"><i /> Interactive demo</span>
               </div>
               <AnimatePresence>
                 {state.focusLabel && (
